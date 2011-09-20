@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+            android:key="enable_speed_warning"
+            android:title="Enable speed warning"
+            android:defaultValue="false" />
+    <PreferenceScreen
+            android:key="speed_warning"
+            android:title="Speed warnings"
+            android:dependency="enable_speed_warning">
+        <CheckBoxPreference
+                android:key="speed_30"
+                android:title="30 km/h" />
+        <CheckBoxPreference
+                android:key="speed_40"
+                android:title="40 km/h" />
+        <CheckBoxPreference
+                android:key="speed_50"
+                android:title="50 km/h" />
+        <CheckBoxPreference
+                android:key="speed_60"
+                android:title="60 km/h" />
+        <CheckBoxPreference
+                android:key="speed_70"
+                android:title="70 km/h" />
+        <CheckBoxPreference
+                android:key="speed_80"
+                android:title="80 km/h" />
+        <CheckBoxPreference
+                android:key="speed_90"
+                android:title="90 km/h" />
+        <CheckBoxPreference
+                android:key="speed_100"
+                android:title="100 km/h" />
+        <CheckBoxPreference
+                android:key="speed_110"
+                android:title="110 km/h" />
+        <CheckBoxPreference
+                android:key="speed_120"
+                android:title="120 km/h" />
+        <CheckBoxPreference
+                android:key="speed_130"
+                android:title="130 km/h" />
+        <CheckBoxPreference
+                android:key="speed_140"
+                android:title="140 km/h" />
+        <CheckBoxPreference
+                android:key="speed_150"
+                android:title="150 km/h" />
+    </PreferenceScreen>
+</PreferenceScreen>
