@@ -17,7 +17,7 @@ import android.text.format.Time;
 import android.util.Log;
 
 public class GpsService extends Service implements LocationListener, Listener {
-	
+
 	private final static String TAG = "GpsService";
 	private WakeLock wl;
 
@@ -31,10 +31,10 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static double _altitude = 0;
 	private static float _accuracy = 0;
 	private static Time _time = new Time();
-	
+
 	private static int _maxSatellites = 0;
 	private static int _satellitesInFix = 0;
-	
+
 	public static String getLon() {
 		return _lon;
 	}
@@ -50,6 +50,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public static float getSpeed() {
 		return _speed;
 	}
+
 	public static double getAltitude() {
 		return _altitude;
 	}
@@ -57,7 +58,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public static Time getTime() {
 		return _time;
 	}
-	
+
 	public static int getMaxSatellites() {
 		return _maxSatellites;
 	}
@@ -79,23 +80,29 @@ public class GpsService extends Service implements LocationListener, Listener {
 		Log.i(TAG, "stopping service");
 		context.stopService(new Intent(context, GpsService.class));
 	}
-	
+
 	@Override
 	public void onStart(Intent intent, int startId) {
-		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "StartGPSServiceAndStayAwake");
-		wl.acquire();
+		if (wl == null) {
+			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+			wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
+					"StartGPSServiceAndStayAwake");
+			wl.acquire();
+		}
 
 		initLocationManager();
 		super.onStart(intent, startId);
 	}
+
 	private void initLocationManager() {
 		if (locationManager == null) {
 			// Acquire a reference to the system Location Manager
-			locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+			locationManager = (LocationManager) this
+					.getSystemService(Context.LOCATION_SERVICE);
 
 			locationManager.addGpsStatusListener(this);
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+			locationManager.requestLocationUpdates(
+					LocationManager.GPS_PROVIDER, 0, 0, this);
 		}
 	}
 
@@ -122,8 +129,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onDestroy() {
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
+			locationManager = null;
 		}
-		wl.release();
+		if(wl != null) {
+			wl.release();
+			wl = null;
+		}
 		super.onDestroy();
 	}
 
@@ -131,7 +142,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public IBinder onBind(Intent intent) {
 		return null;
 	}
-	
+
 	private void updateGps() {
 		if (status != null) {
 			int n = 0;
