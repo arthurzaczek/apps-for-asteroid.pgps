@@ -10,6 +10,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.GpsStatus.Listener;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -19,7 +20,10 @@ import android.util.Log;
 public class GpsService extends Service implements LocationListener, Listener {
 
 	private final static String TAG = "GpsService";
+	private static Object lock = new Object();
+
 	private WakeLock wl;
+	private static Handler hRefresh;
 
 	private LocationManager locationManager;
 	private GpsStatus status = null;
@@ -34,6 +38,18 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	private static int _maxSatellites = 0;
 	private static int _satellitesInFix = 0;
+
+	public static void registerUpdateListener(Handler h) {
+		synchronized (lock) {
+			hRefresh = h; // There can be only one
+		}
+	}
+
+	public static void unregisterUpdateListener() {
+		synchronized (lock) {
+			hRefresh = null;
+		}
+	}
 
 	public static String getLon() {
 		return _lon;
@@ -131,7 +147,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			locationManager.removeUpdates(this);
 			locationManager = null;
 		}
-		if(wl != null) {
+		if (wl != null) {
 			wl.release();
 			wl = null;
 		}
@@ -175,6 +191,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 			_speed = 0;
 			_time = null;
 			_lon = _lat = "";
+		}
+
+		synchronized (lock) {
+			if (hRefresh != null) {
+				hRefresh.sendEmptyMessage(Main.REFRESH);
+			}
 		}
 	}
 }

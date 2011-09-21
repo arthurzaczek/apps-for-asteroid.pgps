@@ -1,7 +1,5 @@
 package net.zaczek.PGps;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,9 +19,8 @@ public class Main extends Activity {
 	private TextView txtAccuracy;
 	private TextView txtAltitude;
 
-	private Timer timer;
 	private Handler hRefresh;
-	private final int REFRESH = 1;
+	public final static int REFRESH = 1;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -50,15 +47,18 @@ public class Main extends Activity {
 				}
 			}
 		};
-
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				hRefresh.sendEmptyMessage(REFRESH);
-			}
-		}, 1000, 1000);
-
+	}
+	
+	@Override
+	protected void onPause() {
+		GpsService.unregisterUpdateListener();
+		super.onPause();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		GpsService.registerUpdateListener(hRefresh);
 	}
 
 	private void updateGps() {
