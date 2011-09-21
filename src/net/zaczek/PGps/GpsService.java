@@ -110,8 +110,10 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onStart(Intent intent, int startId) {
 		if (wl == null) {
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-			wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "StartGPSServiceAndStayAwake");
-			wl.acquire();
+			if(pm != null) {
+				wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "StartGPSServiceAndStayAwake");
+				wl.acquire();
+			}
 		}
 
 		initLocationManager();
