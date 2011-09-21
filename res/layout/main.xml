@@ -4,7 +4,8 @@
 	android:orientation="vertical">
 
 	<TextView android:layout_height="wrap_content"
-		android:layout_width="wrap_content" android:text="P-Gps current speed"
+		android:id="@+id/txtHeader"
+		android:layout_width="wrap_content" android:text="P-Gps"
 		android:padding="5sp" android:textStyle="bold" android:textSize="24sp" />
 
 	<LinearLayout android:orientation="horizontal"
@@ -27,7 +28,7 @@
 		android:layout_gravity="right" android:layout_marginRight="10sp"
 		android:textSize="90sp"></TextView>
 
-	<TextView android:text="321 m" android:id="@+id/txtAltitude"
+	<TextView android:text="Some informations" android:id="@+id/txtInfo"
 		android:textSize="30sp" android:layout_height="wrap_content"
 		android:layout_width="wrap_content" android:layout_gravity="right" android:layout_marginRight="10sp"></TextView>
 

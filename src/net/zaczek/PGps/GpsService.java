@@ -26,8 +26,9 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static Handler hRefresh;
 
 	private LocationManager locationManager;
-	private GpsStatus status = null;
-	private Location location = null;
+	private static GpsStatus status = null;
+	private static Location location = null;
+	private static Location lastLocation = null;
 
 	private static String _lon = "";
 	private static String _lat = "";
@@ -49,6 +50,14 @@ public class GpsService extends Service implements LocationListener, Listener {
 		synchronized (lock) {
 			hRefresh = null;
 		}
+	}
+
+	public static Location getLocation() {
+		return location;
+	}
+
+	public static Location getLastLocation() {
+		return lastLocation;
 	}
 
 	public static String getLon() {
@@ -101,8 +110,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onStart(Intent intent, int startId) {
 		if (wl == null) {
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-			wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
-					"StartGPSServiceAndStayAwake");
+			wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "StartGPSServiceAndStayAwake");
 			wl.acquire();
 		}
 
@@ -113,12 +121,10 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private void initLocationManager() {
 		if (locationManager == null) {
 			// Acquire a reference to the system Location Manager
-			locationManager = (LocationManager) this
-					.getSystemService(Context.LOCATION_SERVICE);
+			locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
 			locationManager.addGpsStatusListener(this);
-			locationManager.requestLocationUpdates(
-					LocationManager.GPS_PROVIDER, 0, 0, this);
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 		}
 	}
 
@@ -128,6 +134,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	}
 
 	public void onLocationChanged(Location l) {
+		lastLocation = location;
 		location = l;
 		updateGps();
 	}
@@ -180,8 +187,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 			_accuracy = location.getAccuracy();
 			double lon = location.getLongitude();
 			double lat = location.getLatitude();
-			_lon = Location.convert(lon, Location.FORMAT_DEGREES);
-			_lat = Location.convert(lat, Location.FORMAT_DEGREES);
+			try {
+				_lon = Location.convert(lon, Location.FORMAT_DEGREES);
+				_lat = Location.convert(lat, Location.FORMAT_DEGREES);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 			_speed = location.getSpeed();
 			_altitude = location.getAltitude();
 			_time = new Time();

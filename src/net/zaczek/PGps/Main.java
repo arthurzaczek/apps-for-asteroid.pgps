@@ -1,11 +1,17 @@
 package net.zaczek.PGps;
 
+import java.util.ArrayList;
+
+import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.Intent;
+import android.location.Location;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -17,24 +23,36 @@ public class Main extends Activity {
 	private TextView txtStatus;
 	private TextView txtSpeed;
 	private TextView txtAccuracy;
-	private TextView txtAltitude;
+	private TextView txtInfo;
+	private TextView txtHeader;
 
 	private Handler hRefresh;
 	public final static int REFRESH = 1;
+
+	public final static int MODE_ALTITUDE = 0;
+	public final static int MODE_POI = 1;
+	public final static int MODES = 2;
+
+	public int currentMode = MODE_POI;
+	
+	ArrayList<POI> pois;
+	int currentPOI = -1;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		
+
 		GpsService.start(getApplicationContext());
 
 		txtStatus = (TextView) findViewById(R.id.txtStatus);
 		txtSpeed = (TextView) findViewById(R.id.txtSpeed);
 		txtAccuracy = (TextView) findViewById(R.id.txtAccuracy);
-		txtAltitude = (TextView) findViewById(R.id.txtAltitude);
+		txtInfo = (TextView) findViewById(R.id.txtInfo);
+		txtHeader = (TextView) findViewById(R.id.txtHeader);
 
+		setHeader();
 		updateGps();
 
 		hRefresh = new Handler() {
@@ -47,14 +65,17 @@ public class Main extends Activity {
 				}
 			}
 		};
+
+		pois = POI.load();
+		if(pois.size() != 0) currentPOI = 0;
 	}
-	
+
 	@Override
 	protected void onPause() {
 		GpsService.unregisterUpdateListener();
 		super.onPause();
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -66,9 +87,76 @@ public class Main extends Activity {
 
 		txtSpeed.setText(String.format("%.0f km/h", GpsService.getSpeed() * 3.6));
 		txtAccuracy.setText(String.format("%.2f m", GpsService.getAccuracy()));
-		txtAltitude.setText(String.format("%.2f m", GpsService.getAltitude()));
+		switch (currentMode) {
+		case MODE_ALTITUDE:
+			txtInfo.setText(String.format("%.2f m", GpsService.getAltitude()));
+			break;
+		case MODE_POI:
+			if(currentPOI >= 0) {
+				final Location current = GpsService.getLocation();
+				if(current != null) {
+					POI poi = pois.get(currentPOI);
+					float meters = current.distanceTo(poi.getLocation());
+					if(meters < 1000.0f) {
+						txtInfo.setText(String.format("%s: %.2f m", poi.getName(), meters));
+					} else {
+						txtInfo.setText(String.format("%s: %.2f km", poi.getName(),meters / 1000.0f));
+					}
+				}
+			} else {
+				txtInfo.setText("No POI selected");
+			}
+			break;
+		}
+
+	}
+
+	private void setHeader() {
+		switch (currentMode) {
+		case MODE_ALTITUDE:
+			txtHeader.setText("PGps - current altitude");
+			break;
+		case MODE_POI:
+			txtHeader.setText("PGps - distance to POI");
+			break;
+		}
 	}
 	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_DPAD_DOWN:
+			return true;
+		case KeyEvent.KEYCODE_DPAD_UP:
+			return true;
+		case KeyEvent.KEYCODE_DPAD_RIGHT:
+		case KeyEvent.KEYCODE_MEDIA_NEXT:
+			switch(currentMode) {
+			case MODE_POI:
+				currentPOI = (++currentPOI) % pois.size(); 
+				updateGps();
+				break;
+			}
+			return true;
+		case KeyEvent.KEYCODE_DPAD_LEFT:
+		case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+			switch(currentMode) {
+			case MODE_POI:
+				currentPOI--;
+				if(currentPOI < 0) currentPOI = pois.size() - 1;
+				updateGps();
+				break;
+			}
+			return true;
+		case KeyEvent.KEYCODE_DPAD_CENTER:
+			return true;
+		case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+			return true;
+		default:
+			return super.onKeyDown(keyCode, event);
+		}
+	}
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
