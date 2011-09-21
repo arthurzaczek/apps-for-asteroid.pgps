@@ -9,9 +9,24 @@ import android.location.Location;
 import android.text.TextUtils;
 
 public class POI {
+	private static ArrayList<POI> _pois;
+	
+	public static ArrayList<POI> getPois() {
+		return _pois;
+	}
 
-	public static ArrayList<POI> load() {
-		final ArrayList<POI> result = new ArrayList<POI>();
+	public static int size() {
+		return _pois.size();
+	}
+
+	public static POI get(int idx) {
+		return _pois.get(idx);
+	}
+
+	public synchronized static void load() {
+		if(_pois != null) return;
+		
+		_pois = new ArrayList<POI>();
 
 		try {
 			final FileReader reader = DataManager.openRead("POI.txt");
@@ -39,7 +54,7 @@ public class POI {
 
 						poi.setLocation(loc);
 
-						result.add(poi);
+						_pois.add(poi);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -50,7 +65,6 @@ public class POI {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return result;
 	}
 
 	private String name;

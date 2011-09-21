@@ -35,7 +35,6 @@ public class Main extends Activity {
 
 	public int currentMode = MODE_POI;
 	
-	ArrayList<POI> pois;
 	int currentPOI = -1;
 
 	/** Called when the activity is first created. */
@@ -66,8 +65,8 @@ public class Main extends Activity {
 			}
 		};
 
-		pois = POI.load();
-		if(pois.size() != 0) currentPOI = 0;
+		POI.load();
+		if(POI.size() != 0) currentPOI = 0;
 	}
 
 	@Override
@@ -95,7 +94,7 @@ public class Main extends Activity {
 			if(currentPOI >= 0) {
 				final Location current = GpsService.getLocation();
 				if(current != null) {
-					POI poi = pois.get(currentPOI);
+					POI poi = POI.get(currentPOI);
 					float meters = current.distanceTo(poi.getLocation());
 					if(meters < 1000.0f) {
 						txtInfo.setText(String.format("%s: %.2f m", poi.getName(), meters));
@@ -133,7 +132,7 @@ public class Main extends Activity {
 		case KeyEvent.KEYCODE_MEDIA_NEXT:
 			switch(currentMode) {
 			case MODE_POI:
-				currentPOI = (++currentPOI) % pois.size(); 
+				currentPOI = (++currentPOI) % POI.size(); 
 				updateGps();
 				break;
 			}
@@ -143,7 +142,7 @@ public class Main extends Activity {
 			switch(currentMode) {
 			case MODE_POI:
 				currentPOI--;
-				if(currentPOI < 0) currentPOI = pois.size() - 1;
+				if(currentPOI < 0) currentPOI = POI.size() - 1;
 				updateGps();
 				break;
 			}
