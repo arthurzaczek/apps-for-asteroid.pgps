@@ -49,8 +49,8 @@ public class POI {
 							continue;
 
 						Location loc = new Location("");
-						loc.setLongitude(Location.convert(strLoc[0]));
-						loc.setLatitude(Location.convert(strLoc[1]));
+						loc.setLatitude(Location.convert(strLoc[0]));
+						loc.setLongitude(Location.convert(strLoc[1]));
 
 						poi.setLocation(loc);
 

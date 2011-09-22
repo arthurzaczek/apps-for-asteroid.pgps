@@ -1,12 +1,9 @@
 package net.zaczek.PGps;
 
-import java.util.ArrayList;
-
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -45,6 +42,9 @@ public class Main extends Activity {
 
 		GpsService.start(getApplicationContext());
 
+		POI.load();
+		if(POI.size() != 0) currentPOI = 0;
+
 		txtStatus = (TextView) findViewById(R.id.txtStatus);
 		txtSpeed = (TextView) findViewById(R.id.txtSpeed);
 		txtAccuracy = (TextView) findViewById(R.id.txtAccuracy);
@@ -64,9 +64,6 @@ public class Main extends Activity {
 				}
 			}
 		};
-
-		POI.load();
-		if(POI.size() != 0) currentPOI = 0;
 	}
 
 	@Override
@@ -101,7 +98,9 @@ public class Main extends Activity {
 					} else {
 						txtInfo.setText(String.format("%s: %.2f km", poi.getName(),meters / 1000.0f));
 					}
-				}
+				} else {
+					txtInfo.setText("No location");
+				}				
 			} else {
 				txtInfo.setText("No POI selected");
 			}
