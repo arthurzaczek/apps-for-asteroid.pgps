@@ -15,6 +15,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Main extends Activity {
 	private static final String TAG = "PGps";
@@ -31,7 +32,8 @@ public class Main extends Activity {
 
 	public final static int MODE_ALTITUDE = 0;
 	public final static int MODE_POI = 1;
-	public final static int MODES = 2;
+	public final static int MODE_LAT_LON = 2;
+	public final static int MODES = 3;
 
 	public int currentMode = MODE_POI;
 	
@@ -90,6 +92,9 @@ public class Main extends Activity {
 		case MODE_ALTITUDE:
 			txtInfo.setText(String.format("%.2f m", GpsService.getAltitude()));
 			break;
+		case MODE_LAT_LON:
+			txtInfo.setText(String.format("lat: %s lon: %s", GpsService.getLat(), GpsService.getLon()));
+			break;
 		case MODE_POI:
 			if(currentPOI >= 0) {
 				final Location current = GpsService.getLocation();
@@ -118,6 +123,9 @@ public class Main extends Activity {
 		case MODE_POI:
 			txtHeader.setText("PGps - distance to POI");
 			break;
+		case MODE_LAT_LON:
+			txtHeader.setText("PGps - Lat/Lon");
+			break;
 		}
 	}
 	
@@ -125,8 +133,14 @@ public class Main extends Activity {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_DPAD_DOWN:
+			currentMode = (++currentMode) % MODES;
+			setHeader();
+			updateGps();
 			return true;
 		case KeyEvent.KEYCODE_DPAD_UP:
+			if(--currentMode < 0) currentMode = MODES - 1;
+			setHeader();
+			updateGps();
 			return true;
 		case KeyEvent.KEYCODE_DPAD_RIGHT:
 		case KeyEvent.KEYCODE_MEDIA_NEXT:
@@ -141,18 +155,30 @@ public class Main extends Activity {
 		case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
 			switch(currentMode) {
 			case MODE_POI:
-				currentPOI--;
-				if(currentPOI < 0) currentPOI = POI.size() - 1;
+				if(--currentPOI < 0) currentPOI = POI.size() - 1;
 				updateGps();
 				break;
 			}
 			return true;
 		case KeyEvent.KEYCODE_DPAD_CENTER:
+			switch(currentMode) {
+			case MODE_POI:
+				savePOI();
+				break;
+			}
 			return true;
 		case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
 			return true;
 		default:
 			return super.onKeyDown(keyCode, event);
+		}
+	}
+
+	private void savePOI() {
+		final Location current = GpsService.getLocation();
+		if(current != null) {
+			POI.save(current);
+			Toast.makeText(this, "POI saved", Toast.LENGTH_LONG).show();
 		}
 	}
 

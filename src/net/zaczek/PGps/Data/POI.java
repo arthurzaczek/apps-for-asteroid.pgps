@@ -1,16 +1,20 @@
 package net.zaczek.PGps.Data;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import android.location.Location;
 import android.text.TextUtils;
+import android.text.format.Time;
+import android.text.method.DateTimeKeyListener;
 
 public class POI {
 	private static ArrayList<POI> _pois;
-	
+
 	public static ArrayList<POI> getPois() {
 		return _pois;
 	}
@@ -24,8 +28,9 @@ public class POI {
 	}
 
 	public synchronized static void load() {
-		if(_pois != null) return;
-		
+		if (_pois != null)
+			return;
+
 		_pois = new ArrayList<POI>();
 
 		try {
@@ -35,22 +40,24 @@ public class POI {
 				while (true) {
 					try {
 						final String line = DataManager.readLine(in);
-						if(line == null) break;
-						
-						if (TextUtils.isEmpty(line)) continue;
+						if (line == null)
+							break;
+
+						if (TextUtils.isEmpty(line))
+							continue;
 						final String[] parts = line.split(":");
 						if (parts.length != 2)
 							continue;
 						POI poi = new POI();
 						poi.setName(parts[0]);
 
-						final String[] strLoc = parts[1].trim().split("[ ,;]");
+						final String[] strLoc = parts[1].trim().split(",");
 						if (strLoc.length != 2)
 							continue;
 
 						Location loc = new Location("");
-						loc.setLongitude(Location.convert(strLoc[0]));
-						loc.setLatitude(Location.convert(strLoc[1]));
+						loc.setLatitude(Location.convert(strLoc[0].trim()));
+						loc.setLongitude(Location.convert(strLoc[1].trim()));
 
 						poi.setLocation(loc);
 
@@ -86,4 +93,27 @@ public class POI {
 		return location;
 	}
 
+	public synchronized static void save(Location loc) {
+		Time now = new Time();
+		now.setToNow();
+		POI poi = new POI();
+		poi.setName(now.format("%x %X"));
+		poi.setLocation(loc);
+		_pois.add(poi);
+
+		try {
+			final FileWriter writer = DataManager.openWrite("POI.txt", true);
+			try {
+				final BufferedWriter out = new BufferedWriter(writer);
+				out.write(String.format("\n%s:%s,%s", 
+						poi.getName(), 
+						Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES),
+						Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES)));
+			} finally {
+				writer.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

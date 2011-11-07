@@ -30,8 +30,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static Location location = null;
 	private static Location lastLocation = null;
 
-	private static String _lon = "";
 	private static String _lat = "";
+	private static String _lon = "";
 	private static float _speed = 0;
 	private static double _altitude = 0;
 	private static float _accuracy = 0;
@@ -60,16 +60,16 @@ public class GpsService extends Service implements LocationListener, Listener {
 		return lastLocation;
 	}
 
-	public static String getLon() {
-		return _lon;
-	}
-
 	public static float getAccuracy() {
 		return _accuracy;
 	}
 
 	public static String getLat() {
 		return _lat;
+	}
+
+	public static String getLon() {
+		return _lon;
 	}
 
 	public static float getSpeed() {
@@ -187,11 +187,11 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		if (location != null) {
 			_accuracy = location.getAccuracy();
-			double lon = location.getLongitude();
 			double lat = location.getLatitude();
+			double lon = location.getLongitude();
 			try {
-				_lon = Location.convert(lon, Location.FORMAT_DEGREES);
 				_lat = Location.convert(lat, Location.FORMAT_DEGREES);
+				_lon = Location.convert(lon, Location.FORMAT_DEGREES);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
