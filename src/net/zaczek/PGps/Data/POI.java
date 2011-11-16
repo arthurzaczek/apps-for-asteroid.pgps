@@ -58,7 +58,6 @@ public class POI {
 						Location loc = new Location("");
 						loc.setLatitude(Location.convert(strLoc[0].trim()));
 						loc.setLongitude(Location.convert(strLoc[1].trim()));
-
 						poi.setLocation(loc);
 
 						_pois.add(poi);
