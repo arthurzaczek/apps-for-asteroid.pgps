@@ -108,6 +108,7 @@ public class POI {
 						poi.getName(), 
 						Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES),
 						Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES)));
+				out.flush();
 			} finally {
 				writer.close();
 			}
