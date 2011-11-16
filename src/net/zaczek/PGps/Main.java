@@ -32,7 +32,8 @@ public class Main extends Activity {
 	public final static int MODE_ALTITUDE = 0;
 	public final static int MODE_POI = 1;
 	public final static int MODE_LAT_LON = 2;
-	public final static int MODES = 3;
+	public final static int MODE_DISTANCE = 3;
+	public final static int MODES = 4;
 
 	private int currentMode = MODE_POI;
 
@@ -136,6 +137,16 @@ public class Main extends Activity {
 					txtInfo.setText("No POI selected");
 				}
 				break;
+			case MODE_DISTANCE:
+				final float meters = GpsService.getDistance();
+				if (meters < 1000.0f) {
+					txtInfo.setText(String.format("%.0f m",
+							meters));
+				} else {
+					txtInfo.setText(String.format("%.2f km",
+							meters / 1000.0f));
+				}
+				break;
 			}
 		} else {
 			txtSpeed.setText("--- km/h");
@@ -154,6 +165,9 @@ public class Main extends Activity {
 			break;
 		case MODE_LAT_LON:
 			txtHeader.setText("PGps - Lat/Lon");
+			break;
+		case MODE_DISTANCE:
+			txtHeader.setText("PGps - distance");
 			break;
 		}
 	}
@@ -195,6 +209,10 @@ public class Main extends Activity {
 			switch (currentMode) {
 			case MODE_POI:
 				savePOI();
+				break;
+			case MODE_DISTANCE:
+				GpsService.clearDistance();
+				updateGps();
 				break;
 			}
 			return true;

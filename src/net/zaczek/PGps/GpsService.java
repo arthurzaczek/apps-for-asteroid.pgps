@@ -29,6 +29,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static GpsStatus status = null;
 	private static Location location = null;
 	private static Location lastLocation = null;
+	private static Location lastDistanceLocation = null;
 
 	private static String _lat = "";
 	private static String _lon = "";
@@ -36,6 +37,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static double _altitude = 0;
 	private static float _accuracy = 0;
 	private static Time _time = new Time();
+	private static float _distance = 0;
 
 	private static int _maxSatellites = 0;
 	private static int _satellitesInFix = 0;
@@ -58,6 +60,14 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	public static Location getLastLocation() {
 		return lastLocation;
+	}
+	
+	public static float getDistance() {
+		return _distance;
+	}
+
+	public static void clearDistance() {
+		_distance = 0;
 	}
 
 	public static float getAccuracy() {
@@ -138,6 +148,17 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onLocationChanged(Location l) {
 		lastLocation = location;
 		location = l;
+		
+		if(lastDistanceLocation == null)
+			lastDistanceLocation = location;
+		
+		final float d = lastDistanceLocation.distanceTo(location);
+		if(location.hasAccuracy() 
+				&& d > location.getAccuracy()) {
+			_distance += d;
+			lastDistanceLocation = location;
+		}
+		
 		updateGps();
 	}
 
