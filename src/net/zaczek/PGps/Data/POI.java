@@ -96,7 +96,7 @@ public class POI {
 		Time now = new Time();
 		now.setToNow();
 		POI poi = new POI();
-		poi.setName(now.format("%x %X"));
+		poi.setName(now.format("%x %X").replace(':', '.'));
 		poi.setLocation(loc);
 		_pois.add(poi);
 
@@ -104,7 +104,7 @@ public class POI {
 			final FileWriter writer = DataManager.openWrite("POI.txt", true);
 			try {
 				final BufferedWriter out = new BufferedWriter(writer);
-				out.write(String.format("\n%s:%s,%s", 
+				out.write(String.format("\n%s: %s,%s", 
 						poi.getName(), 
 						Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES),
 						Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES)));
