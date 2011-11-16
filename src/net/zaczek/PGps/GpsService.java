@@ -1,5 +1,7 @@
 package net.zaczek.PGps;
 
+import java.io.IOException;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +11,11 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.GpsStatus.Listener;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnPreparedListener;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -24,6 +31,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	private WakeLock wl;
 	private static Handler hRefresh;
+	private MediaPlayer mp;
 
 	private LocationManager locationManager;
 	private static GpsStatus status = null;
@@ -61,7 +69,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public static Location getLastLocation() {
 		return lastLocation;
 	}
-	
+
 	public static float getDistance() {
 		return _distance;
 	}
@@ -120,23 +128,35 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onStart(Intent intent, int startId) {
 		if (wl == null) {
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-			if(pm != null) {
-				wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "StartGPSServiceAndStayAwake");
+			if (pm != null) {
+				wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
+						"StartGPSServiceAndStayAwake");
 				wl.acquire();
 			}
 		}
 
+		mp = new MediaPlayer();
+		mp.setOnPreparedListener(new OnPreparedListener() {
+			public void onPrepared(MediaPlayer mp) {
+				mp.start();
+			}
+		});
 		initLocationManager();
+
+		playNotification();
+
 		super.onStart(intent, startId);
 	}
 
 	private void initLocationManager() {
 		if (locationManager == null) {
 			// Acquire a reference to the system Location Manager
-			locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+			locationManager = (LocationManager) this
+					.getSystemService(Context.LOCATION_SERVICE);
 
 			locationManager.addGpsStatusListener(this);
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+			locationManager.requestLocationUpdates(
+					LocationManager.GPS_PROVIDER, 0, 0, this);
 		}
 	}
 
@@ -148,17 +168,16 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onLocationChanged(Location l) {
 		lastLocation = location;
 		location = l;
-		
-		if(lastDistanceLocation == null)
+
+		if (lastDistanceLocation == null)
 			lastDistanceLocation = location;
-		
+
 		final float d = lastDistanceLocation.distanceTo(location);
-		if(location.hasAccuracy() 
-				&& d > location.getAccuracy()) {
+		if (location.hasAccuracy() && d > location.getAccuracy()) {
 			_distance += d;
 			lastDistanceLocation = location;
 		}
-		
+
 		updateGps();
 	}
 
@@ -181,6 +200,9 @@ public class GpsService extends Service implements LocationListener, Listener {
 			wl.release();
 			wl = null;
 		}
+
+		mp.reset();
+		mp.release();
 		super.onDestroy();
 	}
 
@@ -231,6 +253,20 @@ public class GpsService extends Service implements LocationListener, Listener {
 			if (hRefresh != null) {
 				hRefresh.sendEmptyMessage(Main.REFRESH);
 			}
+		}
+	}
+
+	private void playNotification() {
+		try {
+			mp.reset();
+			Uri alert = RingtoneManager
+					.getDefaultUri(RingtoneManager.TYPE_ALARM);
+			if (alert != null) {
+				mp.setDataSource(this, alert);
+				mp.prepareAsync();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
