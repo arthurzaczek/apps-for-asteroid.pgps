@@ -3,10 +3,12 @@ package net.zaczek.PGps;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -32,9 +34,11 @@ public class Main extends Activity {
 	public final static int MODE_LAT_LON = 2;
 	public final static int MODES = 3;
 
-	public int currentMode = MODE_POI;
-	
-	int currentPOI = -1;
+	private int currentMode = MODE_POI;
+
+	private int currentPOI = -1;
+
+	private boolean show_last_without_fix = false;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -45,16 +49,14 @@ public class Main extends Activity {
 		GpsService.start(getApplicationContext());
 
 		POI.load();
-		if(POI.size() != 0) currentPOI = 0;
+		if (POI.size() != 0)
+			currentPOI = 0;
 
 		txtStatus = (TextView) findViewById(R.id.txtStatus);
 		txtSpeed = (TextView) findViewById(R.id.txtSpeed);
 		txtAccuracy = (TextView) findViewById(R.id.txtAccuracy);
 		txtInfo = (TextView) findViewById(R.id.txtInfo);
 		txtHeader = (TextView) findViewById(R.id.txtHeader);
-
-		setHeader();
-		updateGps();
 
 		hRefresh = new Handler() {
 			@Override
@@ -77,45 +79,69 @@ public class Main extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+
+		show_last_without_fix = sharedPreferences.getBoolean(
+				"show_last_without_fix", false);
+
 		GpsService.registerUpdateListener(hRefresh);
+		
+		setHeader();
+		updateGps();
 	}
 
 	private void updateGps() {
-		txtStatus.setText(GpsService.getSatellitesInFix() + "/" + GpsService.getMaxSatellites() + " Satellites");
+		txtStatus.setText(GpsService.getSatellitesInFix() + "/"
+				+ GpsService.getMaxSatellites() + " Satellites");
+		boolean inFix = GpsService.getSatellitesInFix() > 0;
 
-		txtSpeed.setText(String.format("%.0f km/h", GpsService.getSpeed() * 3.6));
-		txtAccuracy.setText(String.format("%.2f m", GpsService.getAccuracy()));
-		switch (currentMode) {
-		case MODE_ALTITUDE:
-			txtInfo.setText(String.format("%.2f m", GpsService.getAltitude()));
-			break;
-		case MODE_LAT_LON:
-			txtInfo.setText(String.format("lat: %s lon: %s", GpsService.getLat(), GpsService.getLon()));
-			break;
-		case MODE_POI:
-			if(currentPOI >= 0) {
-				final Location current = GpsService.getLocation();
-				if(current != null) {
-					POI poi = POI.get(currentPOI);
-					final float meters = current.distanceTo(poi.getLocation());
-					String name = poi.getName();
-					if(name.length() > 10) {
-						name = name.substring(0, 10) + "...";
-					}
-					if(meters < 1000.0f) {
-						txtInfo.setText(String.format("%s: %.0f m", name, meters));
+		if (inFix || show_last_without_fix) {
+			txtSpeed.setText(String.format("%.0f km/h",
+					GpsService.getSpeed() * 3.6));
+			txtAccuracy.setText(String.format("%.2f m",
+					GpsService.getAccuracy()));
+
+			switch (currentMode) {
+			case MODE_ALTITUDE:
+				txtInfo.setText(String.format("%.2f m",
+						GpsService.getAltitude()));
+				break;
+			case MODE_LAT_LON:
+				txtInfo.setText(String.format("lat: %s lon: %s",
+						GpsService.getLat(), GpsService.getLon()));
+				break;
+			case MODE_POI:
+				if (currentPOI >= 0) {
+					final Location current = GpsService.getLocation();
+					if (current != null) {
+						POI poi = POI.get(currentPOI);
+						final float meters = current.distanceTo(poi
+								.getLocation());
+						String name = poi.getName();
+						if (name.length() > 10) {
+							name = name.substring(0, 10) + "...";
+						}
+						if (meters < 1000.0f) {
+							txtInfo.setText(String.format("%s: %.0f m", name,
+									meters));
+						} else {
+							txtInfo.setText(String.format("%s: %.2f km", name,
+									meters / 1000.0f));
+						}
 					} else {
-						txtInfo.setText(String.format("%s: %.2f km", name, meters / 1000.0f));
+						txtInfo.setText("No location");
 					}
 				} else {
-					txtInfo.setText("No location");
-				}				
-			} else {
-				txtInfo.setText("No POI selected");
+					txtInfo.setText("No POI selected");
+				}
+				break;
 			}
-			break;
+		} else {
+			txtSpeed.setText("---");
+			txtAccuracy.setText("---");
+			txtInfo.setText("No fix");
 		}
-
 	}
 
 	private void setHeader() {
@@ -131,7 +157,7 @@ public class Main extends Activity {
 			break;
 		}
 	}
-	
+
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		switch (keyCode) {
@@ -141,30 +167,32 @@ public class Main extends Activity {
 			updateGps();
 			return true;
 		case KeyEvent.KEYCODE_DPAD_UP:
-			if(--currentMode < 0) currentMode = MODES - 1;
+			if (--currentMode < 0)
+				currentMode = MODES - 1;
 			setHeader();
 			updateGps();
 			return true;
 		case KeyEvent.KEYCODE_DPAD_RIGHT:
 		case KeyEvent.KEYCODE_MEDIA_NEXT:
-			switch(currentMode) {
+			switch (currentMode) {
 			case MODE_POI:
-				currentPOI = (++currentPOI) % POI.size(); 
+				currentPOI = (++currentPOI) % POI.size();
 				updateGps();
 				break;
 			}
 			return true;
 		case KeyEvent.KEYCODE_DPAD_LEFT:
 		case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-			switch(currentMode) {
+			switch (currentMode) {
 			case MODE_POI:
-				if(--currentPOI < 0) currentPOI = POI.size() - 1;
+				if (--currentPOI < 0)
+					currentPOI = POI.size() - 1;
 				updateGps();
 				break;
 			}
 			return true;
 		case KeyEvent.KEYCODE_DPAD_CENTER:
-			switch(currentMode) {
+			switch (currentMode) {
 			case MODE_POI:
 				savePOI();
 				break;
@@ -179,7 +207,7 @@ public class Main extends Activity {
 
 	private void savePOI() {
 		final Location current = GpsService.getLocation();
-		if(current != null) {
+		if (current != null) {
 			POI.save(current);
 			Toast.makeText(this, "POI saved", Toast.LENGTH_LONG).show();
 		}

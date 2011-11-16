@@ -49,4 +49,8 @@
                 android:key="speed_150"
                 android:title="150 km/h" />
     </PreferenceScreen>
+	<CheckBoxPreference
+            android:key="show_last_without_fix"
+            android:title="Show last values while no fix"
+            android:defaultValue="false" />
 </PreferenceScreen>
