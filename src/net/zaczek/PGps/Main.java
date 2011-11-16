@@ -138,8 +138,8 @@ public class Main extends Activity {
 				break;
 			}
 		} else {
-			txtSpeed.setText("---");
-			txtAccuracy.setText("---");
+			txtSpeed.setText("--- km/h");
+			txtAccuracy.setText("---.-- m");
 			txtInfo.setText("No fix");
 		}
 	}
