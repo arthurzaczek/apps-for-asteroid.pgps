@@ -97,11 +97,15 @@ public class Main extends Activity {
 				final Location current = GpsService.getLocation();
 				if(current != null) {
 					POI poi = POI.get(currentPOI);
-					float meters = current.distanceTo(poi.getLocation());
+					final float meters = current.distanceTo(poi.getLocation());
+					String name = poi.getName();
+					if(name.length() > 10) {
+						name = name.substring(0, 10) + "...";
+					}
 					if(meters < 1000.0f) {
-						txtInfo.setText(String.format("%s: %.2f m", poi.getName(), meters));
+						txtInfo.setText(String.format("%s: %.0f m", name, meters));
 					} else {
-						txtInfo.setText(String.format("%s: %.2f km", poi.getName(),meters / 1000.0f));
+						txtInfo.setText(String.format("%s: %.2f km", name, meters / 1000.0f));
 					}
 				} else {
 					txtInfo.setText("No location");
