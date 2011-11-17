@@ -1,7 +1,5 @@
 package net.zaczek.PGps;
 
-import java.io.IOException;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +9,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.GpsStatus.Listener;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.media.RingtoneManager;
