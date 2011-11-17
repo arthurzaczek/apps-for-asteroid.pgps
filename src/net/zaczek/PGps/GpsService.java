@@ -16,6 +16,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -30,83 +31,83 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private static Object lock = new Object();
 
 	private WakeLock wl;
-	private static Handler hRefresh;
+	private Handler hRefresh;
 	private MediaPlayer mp;
 
 	private LocationManager locationManager;
-	private static GpsStatus status = null;
-	private static Location location = null;
-	private static Location lastLocation = null;
-	private static Location lastDistanceLocation = null;
+	private GpsStatus status = null;
+	private Location location = null;
+	private Location lastLocation = null;
+	private Location lastDistanceLocation = null;
 
-	private static String _lat = "";
-	private static String _lon = "";
-	private static float _speed = 0;
-	private static double _altitude = 0;
-	private static float _accuracy = 0;
-	private static Time _time = new Time();
-	private static float _distance = 0;
+	private String _lat = "";
+	private String _lon = "";
+	private float _speed = 0;
+	private double _altitude = 0;
+	private float _accuracy = 0;
+	private Time _time = new Time();
+	private float _distance = 0;
 
-	private static int _maxSatellites = 0;
-	private static int _satellitesInFix = 0;
+	private int _maxSatellites = 0;
+	private int _satellitesInFix = 0;
 
-	public static void registerUpdateListener(Handler h) {
+	public void registerUpdateListener(Handler h) {
 		synchronized (lock) {
 			hRefresh = h; // There can be only one
 		}
 	}
 
-	public static void unregisterUpdateListener() {
+	public void unregisterUpdateListener() {
 		synchronized (lock) {
 			hRefresh = null;
 		}
 	}
 
-	public static Location getLocation() {
+	public Location getLocation() {
 		return location;
 	}
 
-	public static Location getLastLocation() {
+	public Location getLastLocation() {
 		return lastLocation;
 	}
 
-	public static float getDistance() {
+	public float getDistance() {
 		return _distance;
 	}
 
-	public static void clearDistance() {
+	public void clearDistance() {
 		_distance = 0;
 	}
 
-	public static float getAccuracy() {
+	public float getAccuracy() {
 		return _accuracy;
 	}
 
-	public static String getLat() {
+	public String getLat() {
 		return _lat;
 	}
 
-	public static String getLon() {
+	public String getLon() {
 		return _lon;
 	}
 
-	public static float getSpeed() {
+	public float getSpeed() {
 		return _speed;
 	}
 
-	public static double getAltitude() {
+	public double getAltitude() {
 		return _altitude;
 	}
 
-	public static Time getTime() {
+	public Time getTime() {
 		return _time;
 	}
 
-	public static int getMaxSatellites() {
+	public int getMaxSatellites() {
 		return _maxSatellites;
 	}
 
-	public static int getSatellitesInFix() {
+	public int getSatellitesInFix() {
 		return _satellitesInFix;
 	}
 
@@ -205,10 +206,18 @@ public class GpsService extends Service implements LocationListener, Listener {
 		mp.release();
 		super.onDestroy();
 	}
+	
+	public class LocalBinder extends Binder {
+        GpsService getService() {
+            return GpsService.this;
+        }
+    };
+
+	private final IBinder mBinder = new LocalBinder();
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		return null;
+		return mBinder;
 	}
 
 	private void updateGps() {

@@ -2,11 +2,15 @@ package net.zaczek.PGps;
 
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -41,6 +45,18 @@ public class Main extends Activity {
 
 	private boolean show_last_without_fix = false;
 
+	private GpsService _service;
+
+	private ServiceConnection mConnection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			_service = ((GpsService.LocalBinder) service).getService();
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			_service = null;
+		}
+	};
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -48,6 +64,8 @@ public class Main extends Activity {
 		setContentView(R.layout.main);
 
 		GpsService.start(getApplicationContext());
+		bindService(new Intent(Main.this, GpsService.class), mConnection,
+				Context.BIND_AUTO_CREATE);
 
 		POI.load();
 		if (POI.size() != 0)
@@ -73,7 +91,7 @@ public class Main extends Activity {
 
 	@Override
 	protected void onPause() {
-		GpsService.unregisterUpdateListener();
+		_service.unregisterUpdateListener();
 		super.onPause();
 	}
 
@@ -86,35 +104,41 @@ public class Main extends Activity {
 		show_last_without_fix = sharedPreferences.getBoolean(
 				"show_last_without_fix", false);
 
-		GpsService.registerUpdateListener(hRefresh);
-		
+		_service.registerUpdateListener(hRefresh);
+
 		setHeader();
 		updateGps();
 	}
 
+	@Override
+	protected void onDestroy() {
+	    super.onDestroy();
+	    unbindService(mConnection);
+	}
+	
 	private void updateGps() {
-		txtStatus.setText(GpsService.getSatellitesInFix() + "/"
-				+ GpsService.getMaxSatellites() + " Satellites");
-		boolean inFix = GpsService.getSatellitesInFix() > 0;
+		txtStatus.setText(_service.getSatellitesInFix() + "/"
+				+ _service.getMaxSatellites() + " Satellites");
+		boolean inFix = _service.getSatellitesInFix() > 0;
 
 		if (inFix || show_last_without_fix) {
 			txtSpeed.setText(String.format("%.0f km/h",
-					GpsService.getSpeed() * 3.6));
+					_service.getSpeed() * 3.6));
 			txtAccuracy.setText(String.format("%.2f m",
-					GpsService.getAccuracy()));
+					_service.getAccuracy()));
 
 			switch (currentMode) {
 			case MODE_ALTITUDE:
 				txtInfo.setText(String.format("%.2f m",
-						GpsService.getAltitude()));
+						_service.getAltitude()));
 				break;
 			case MODE_LAT_LON:
 				txtInfo.setText(String.format("lat: %s lon: %s",
-						GpsService.getLat(), GpsService.getLon()));
+						_service.getLat(), _service.getLon()));
 				break;
 			case MODE_POI:
 				if (currentPOI >= 0) {
-					final Location current = GpsService.getLocation();
+					final Location current = _service.getLocation();
 					if (current != null) {
 						POI poi = POI.get(currentPOI);
 						final float meters = current.distanceTo(poi
@@ -138,13 +162,11 @@ public class Main extends Activity {
 				}
 				break;
 			case MODE_DISTANCE:
-				final float meters = GpsService.getDistance();
+				final float meters = _service.getDistance();
 				if (meters < 1000.0f) {
-					txtInfo.setText(String.format("%.0f m",
-							meters));
+					txtInfo.setText(String.format("%.0f m", meters));
 				} else {
-					txtInfo.setText(String.format("%.2f km",
-							meters / 1000.0f));
+					txtInfo.setText(String.format("%.2f km", meters / 1000.0f));
 				}
 				break;
 			}
@@ -211,7 +233,7 @@ public class Main extends Activity {
 				savePOI();
 				break;
 			case MODE_DISTANCE:
-				GpsService.clearDistance();
+				_service.clearDistance();
 				updateGps();
 				break;
 			}
@@ -224,7 +246,7 @@ public class Main extends Activity {
 	}
 
 	private void savePOI() {
-		final Location current = GpsService.getLocation();
+		final Location current = _service.getLocation();
 		if (current != null) {
 			POI.save(current);
 			Toast.makeText(this, "POI saved", Toast.LENGTH_LONG).show();
