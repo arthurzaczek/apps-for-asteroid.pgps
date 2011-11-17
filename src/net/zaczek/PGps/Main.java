@@ -65,6 +65,7 @@ public class Main extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		GpsService.start(getApplicationContext());
 		bindService(new Intent(this, GpsService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
 
@@ -279,7 +280,7 @@ public class Main extends Activity {
 		Log.d(TAG, "Menu item selected: " + itemId);
 		switch (itemId) {
 		case MENU_PREFERENCES:
-			startActivity(new Intent(this, Preferences.class));
+			startActivityForResult(new Intent(this, Preferences.class), 0);
 			return true;
 		case MENU_EXIT:
 			finish();
@@ -287,5 +288,12 @@ public class Main extends Activity {
 		}
 
 		return super.onMenuItemSelected(featureId, item);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if(_service != null)
+			_service.loadPreferences();
 	}
 }

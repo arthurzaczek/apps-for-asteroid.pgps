@@ -1,8 +1,19 @@
 package net.zaczek.PGps;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import net.zaczek.PGps.Data.DataManager;
+
+import android.R.string;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -19,6 +30,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
+import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -44,9 +57,13 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private float _accuracy = 0;
 	private Time _time = new Time();
 	private float _distance = 0;
+	private float _tripDistance = 0;
 
 	private int _maxSatellites = 0;
 	private int _satellitesInFix = 0;
+
+	private boolean log_trips = false;
+	private boolean isLoggingTrips = false;
 
 	public void registerUpdateListener(Handler h) {
 		synchronized (lock) {
@@ -70,6 +87,10 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	public float getDistance() {
 		return _distance;
+	}
+
+	public float getTripDistance() {
+		return _tripDistance;
 	}
 
 	public void clearDistance() {
@@ -141,9 +162,18 @@ public class GpsService extends Service implements LocationListener, Listener {
 		});
 		initLocationManager();
 
-		playNotification();
+		// playNotification();
+
+		loadPreferences();
 
 		super.onStart(intent, startId);
+	}
+
+	public void loadPreferences() {
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+
+		log_trips = sharedPreferences.getBoolean("log_trips", false);
 	}
 
 	private void initLocationManager() {
@@ -173,9 +203,11 @@ public class GpsService extends Service implements LocationListener, Listener {
 		final float d = lastDistanceLocation.distanceTo(location);
 		if (location.hasAccuracy() && d > location.getAccuracy()) {
 			_distance += d;
+			_tripDistance += d;
 			lastDistanceLocation = location;
 		}
 
+		handleTripStart();
 		updateGps();
 	}
 
@@ -190,6 +222,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	@Override
 	public void onDestroy() {
+		handleTripStop();
+
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
 			locationManager = null;
@@ -199,16 +233,18 @@ public class GpsService extends Service implements LocationListener, Listener {
 			wl = null;
 		}
 
-		mp.reset();
-		mp.release();
+		if (mp != null) {
+			mp.reset();
+			mp.release();
+		}
 		super.onDestroy();
 	}
-	
+
 	public class LocalBinder extends Binder {
-        GpsService getService() {
-            return GpsService.this;
-        }
-    };
+		GpsService getService() {
+			return GpsService.this;
+		}
+	};
 
 	private final IBinder mBinder = new LocalBinder();
 
@@ -273,6 +309,50 @@ public class GpsService extends Service implements LocationListener, Listener {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void handleTripStart() {
+		if (log_trips && !isLoggingTrips) {
+			try {
+				final FileWriter w = DataManager.openWrite("TripLog.txt", true);
+				try {
+					final Date date = new Date();
+					final Locale loc = Locale.getDefault();
+					Log.i(TAG, "Locale = " + loc.toString());
+					w.append(String.format("\n%s;%s", 
+							SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT, loc).format(date),
+							SimpleDateFormat.getTimeInstance(SimpleDateFormat.MEDIUM, loc).format(date)));
+					isLoggingTrips = true;
+				} finally {
+					w.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void handleTripStop() {
+		if (log_trips && isLoggingTrips) {
+			try {
+				final FileWriter w = DataManager.openWrite("TripLog.txt", true);
+				try {
+					final Date date = new Date();
+					final Locale loc = Locale.getDefault();
+					w.append(String.format(";%s;%s;%.2f", 
+							SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT, loc).format(date),
+							SimpleDateFormat.getTimeInstance(SimpleDateFormat.MEDIUM, loc).format(date),
+							_tripDistance / 1000.0f));
+					isLoggingTrips = false;
+				} finally {
+					w.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }
