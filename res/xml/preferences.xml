@@ -53,4 +53,16 @@
             android:key="show_last_without_fix"
             android:title="Show last values while no fix"
             android:defaultValue="false" />
+	<CheckBoxPreference
+            android:key="log_trips"
+            android:title="Log trips"
+            android:summary="Log the start, end and distance of the current trip"
+            android:defaultValue="false" />
+	<ListPreference
+            android:key="record_positions"
+            android:title="Record position"
+            android:summary="Records positions at a given interval"
+            android:defaultValue="0"
+            android:entries="@array/recPosNames"
+            android:entryValues="@array/recPosValues" />    
 </PreferenceScreen>
