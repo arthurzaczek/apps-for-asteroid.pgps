@@ -50,21 +50,22 @@ public class Main extends Activity {
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			_service = ((GpsService.LocalBinder) service).getService();
+			_service.registerUpdateListener(hRefresh);
+			updateGps();
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
 			_service = null;
 		}
 	};
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		GpsService.start(getApplicationContext());
-		bindService(new Intent(Main.this, GpsService.class), mConnection,
+		bindService(new Intent(this, GpsService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
 
 		POI.load();
@@ -91,7 +92,8 @@ public class Main extends Activity {
 
 	@Override
 	protected void onPause() {
-		_service.unregisterUpdateListener();
+		if (_service != null)
+			_service.unregisterUpdateListener();
 		super.onPause();
 	}
 
@@ -104,7 +106,8 @@ public class Main extends Activity {
 		show_last_without_fix = sharedPreferences.getBoolean(
 				"show_last_without_fix", false);
 
-		_service.registerUpdateListener(hRefresh);
+		if (_service != null)
+			_service.registerUpdateListener(hRefresh);
 
 		setHeader();
 		updateGps();
@@ -112,11 +115,15 @@ public class Main extends Activity {
 
 	@Override
 	protected void onDestroy() {
-	    super.onDestroy();
-	    unbindService(mConnection);
+		unbindService(mConnection);
+		super.onDestroy();
 	}
-	
+
 	private void updateGps() {
+		if (_service == null) {
+			txtInfo.setText("Not connected to Service");
+			return;
+		}
 		txtStatus.setText(_service.getSatellitesInFix() + "/"
 				+ _service.getMaxSatellites() + " Satellites");
 		boolean inFix = _service.getSatellitesInFix() > 0;
@@ -124,13 +131,12 @@ public class Main extends Activity {
 		if (inFix || show_last_without_fix) {
 			txtSpeed.setText(String.format("%.0f km/h",
 					_service.getSpeed() * 3.6));
-			txtAccuracy.setText(String.format("%.2f m",
-					_service.getAccuracy()));
+			txtAccuracy
+					.setText(String.format("%.2f m", _service.getAccuracy()));
 
 			switch (currentMode) {
 			case MODE_ALTITUDE:
-				txtInfo.setText(String.format("%.2f m",
-						_service.getAltitude()));
+				txtInfo.setText(String.format("%.2f m", _service.getAltitude()));
 				break;
 			case MODE_LAT_LON:
 				txtInfo.setText(String.format("lat: %s lon: %s",
@@ -233,7 +239,10 @@ public class Main extends Activity {
 				savePOI();
 				break;
 			case MODE_DISTANCE:
-				_service.clearDistance();
+				if (_service != null) {
+					_service.clearDistance();
+					Toast.makeText(this, "Distance cleared", Toast.LENGTH_LONG).show();
+				}
 				updateGps();
 				break;
 			}
@@ -246,6 +255,8 @@ public class Main extends Activity {
 	}
 
 	private void savePOI() {
+		if (_service == null)
+			return;
 		final Location current = _service.getLocation();
 		if (current != null) {
 			POI.save(current);
