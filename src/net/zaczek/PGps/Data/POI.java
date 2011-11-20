@@ -96,7 +96,7 @@ public class POI {
 		Time now = new Time();
 		now.setToNow();
 		POI poi = new POI();
-		poi.setName(now.format("%x %X").replace(':', '.'));
+		poi.setName(now.format("%c").replace(':', '.'));
 		poi.setLocation(loc);
 		_pois.add(poi);
 
