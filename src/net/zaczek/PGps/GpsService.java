@@ -331,17 +331,17 @@ public class GpsService extends Service implements LocationListener, Listener {
 //	}
 
 	public void updateTrip() {
-		if (location == null)
+		if (location == null || log_trips == false)
 			return;
 		Time now = new Time();
 		now.setToNow();
 		long timeDiff = now.toMillis(true) - _last_trip_update.toMillis(true);
 
-		if (log_trips && log_trip_id == -1) {
+		if (log_trip_id == -1) {
 			_tripDistance = 0;
 			log_trip_id = db.newTripEntry(now, location);
 			_last_trip_update = now;
-		} else if (log_trips && log_trip_id != -1 && timeDiff > 10000) {
+		} else if (log_trip_id != -1 && timeDiff > 10000) {
 			db.updateTripEntry(log_trip_id, now, location, _tripDistance, false);
 			_last_trip_update = now;
 		}

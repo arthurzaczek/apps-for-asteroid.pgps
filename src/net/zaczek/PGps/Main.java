@@ -1,5 +1,7 @@
 package net.zaczek.PGps;
 
+import java.io.IOException;
+
 import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
@@ -11,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -267,8 +270,14 @@ public class Main extends Activity {
 			return;
 		final Location current = _service.getLocation();
 		if (current != null) {
-			POI.save(current);
-			Toast.makeText(this, "POI saved", Toast.LENGTH_LONG).show();
+			try {
+				POI.save(current);
+				Toast.makeText(this, "POI saved", Toast.LENGTH_LONG).show();
+			} catch (IOException e) {
+				Toast.makeText(this, "Error saving POI", Toast.LENGTH_LONG)
+						.show();
+				Log.e(TAG, "Error saving POI", e);
+			}
 		}
 	}
 
@@ -291,14 +300,7 @@ public class Main extends Activity {
 			startActivityForResult(new Intent(this, Preferences.class), 0);
 			return true;
 		case MENU_EXPORT_TRIPS:
-			if (_service != null)
-				_service.stopTrip();
-			showDialog(DLG_WAIT_EXPORT_TRIPS);
-			try {
-				DataManager.exportTrips(this);
-			} finally {
-				dismissDialog(DLG_WAIT_EXPORT_TRIPS);
-			}
+			new ExportTripsTask().execute();
 			return true;
 		case MENU_EXIT:
 			finish();
@@ -306,6 +308,40 @@ public class Main extends Activity {
 		}
 
 		return super.onMenuItemSelected(featureId, item);
+	}
+
+	private class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			if (_service != null)
+				_service.stopTrip();
+			try {
+				DataManager.exportTrips(Main.this);
+				return true;
+			} catch (IOException e) {
+				Log.e("PGps", "Unable to export Trips", e);
+				return false;
+			}
+		}
+
+		@Override
+		protected void onPreExecute() {
+			showDialog(DLG_WAIT_EXPORT_TRIPS);
+			super.onPreExecute();
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			dismissDialog(DLG_WAIT_EXPORT_TRIPS);
+			if (result) {
+				Toast.makeText(Main.this, "Trips exported to SD Card",
+						Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(Main.this, "Unable to export Trips",
+						Toast.LENGTH_LONG).show();
+			}
+			super.onPostExecute(result);
+		}
 	}
 
 	@Override

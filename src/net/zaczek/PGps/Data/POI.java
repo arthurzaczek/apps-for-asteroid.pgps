@@ -91,7 +91,7 @@ public class POI {
 		return location;
 	}
 
-	public synchronized static void save(Location loc) {
+	public synchronized static void save(Location loc) throws IOException {
 		Time now = new Time();
 		now.setToNow();
 		POI poi = new POI();
@@ -99,20 +99,18 @@ public class POI {
 		poi.setLocation(loc);
 		_pois.add(poi);
 
+		final OutputStreamWriter writer = DataManager
+				.openWrite("POI.txt", true);
 		try {
-			final OutputStreamWriter writer = DataManager.openWrite("POI.txt", true);
-			try {
-				final BufferedWriter out = new BufferedWriter(writer);
-				out.write(String.format("\n%s: %s,%s", 
-						poi.getName(), 
-						Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES),
-						Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES)));
-				out.flush();
-			} finally {
-				writer.close();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+			final BufferedWriter out = new BufferedWriter(writer);
+			out.write(String.format("\n%s: %s,%s", poi.getName(), Location
+					.convert(loc.getLatitude(), Location.FORMAT_DEGREES),
+					Location.convert(loc.getLongitude(),
+							Location.FORMAT_DEGREES)));
+			out.flush();
+		} finally {
+			writer.close();
 		}
+
 	}
 }
