@@ -72,10 +72,10 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ ");");
 	}
 
-	private void dropDb(SQLiteDatabase db)
-	{
-		db.execSQL("DROP TABLE IF EXISTS " + DatabaseManager.TRIPS_TABLE_NAME);
-	}
+//	private void dropDb(SQLiteDatabase db)
+//	{
+//		db.execSQL("DROP TABLE IF EXISTS " + DatabaseManager.TRIPS_TABLE_NAME);
+//	}
 
 	public void cleanDb(SQLiteDatabase db)
 	{

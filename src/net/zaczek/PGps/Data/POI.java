@@ -3,7 +3,6 @@ package net.zaczek.PGps.Data;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import java.util.ArrayList;
 import android.location.Location;
 import android.text.TextUtils;
 import android.text.format.Time;
-import android.text.method.DateTimeKeyListener;
 
 public class POI {
 	private static ArrayList<POI> _pois;

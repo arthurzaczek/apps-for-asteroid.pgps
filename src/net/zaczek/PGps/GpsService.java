@@ -18,8 +18,6 @@ import android.location.LocationManager;
 import android.location.GpsStatus.Listener;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnPreparedListener;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -318,19 +316,19 @@ public class GpsService extends Service implements LocationListener, Listener {
 		}
 	}
 
-	private void playNotification() {
-		try {
-			mp.reset();
-			Uri alert = RingtoneManager
-					.getDefaultUri(RingtoneManager.TYPE_ALARM);
-			if (alert != null) {
-				mp.setDataSource(this, alert);
-				mp.prepareAsync();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	private void playNotification() {
+//		try {
+//			mp.reset();
+//			Uri alert = RingtoneManager
+//					.getDefaultUri(RingtoneManager.TYPE_ALARM);
+//			if (alert != null) {
+//				mp.setDataSource(this, alert);
+//				mp.prepareAsync();
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	public void updateTrip() {
 		if (location == null)
