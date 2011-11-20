@@ -1,15 +1,7 @@
 package net.zaczek.PGps;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import net.zaczek.PGps.Data.DatabaseManager;
 
-import net.zaczek.PGps.Data.DataManager;
-
-import android.R.string;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +23,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
-import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -43,6 +34,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private WakeLock wl;
 	private Handler hRefresh;
 	private MediaPlayer mp;
+	private DatabaseManager db;
+
 
 	private LocationManager locationManager;
 	private GpsStatus status = null;
@@ -63,7 +56,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private int _satellitesInFix = 0;
 
 	private boolean log_trips = false;
-	private boolean isLoggingTrips = false;
+	private long log_trip_id = -1;
+	private Time _last_trip_update = new Time();
 
 	public void registerUpdateListener(Handler h) {
 		synchronized (lock) {
@@ -153,6 +147,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 				wl.acquire();
 			}
 		}
+		
+		db = new DatabaseManager(getApplicationContext());
 
 		mp = new MediaPlayer();
 		mp.setOnPreparedListener(new OnPreparedListener() {
@@ -173,7 +169,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 		SharedPreferences sharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		log_trips = sharedPreferences.getBoolean("log_trips", false);
+		log_trips = sharedPreferences.getBoolean("log_trips", true);
 	}
 
 	private void initLocationManager() {
@@ -207,7 +203,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			lastDistanceLocation = location;
 		}
 
-		handleTripStart();
+		updateTrip();
 		updateGps();
 	}
 
@@ -222,7 +218,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	@Override
 	public void onDestroy() {
-		handleTripStop();
+		stopTrip();
 
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
@@ -312,47 +308,30 @@ public class GpsService extends Service implements LocationListener, Listener {
 		}
 	}
 
-	private void handleTripStart() {
-		if (log_trips && !isLoggingTrips) {
-			try {
-				final FileWriter w = DataManager.openWrite("TripLog.txt", true);
-				try {
-					final Date date = new Date();
-					final Locale loc = Locale.getDefault();
-					Log.i(TAG, "Locale = " + loc.toString());
-					w.append(String.format("\n%s;%s", 
-							SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT, loc).format(date),
-							SimpleDateFormat.getTimeInstance(SimpleDateFormat.MEDIUM, loc).format(date)));
-					isLoggingTrips = true;
-				} finally {
-					w.close();
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	public void updateTrip() {
+		if(location == null) return;
+		Time now = new Time();
+		now.setToNow();
+		long timeDiff = now.toMillis(true) - _last_trip_update.toMillis(true);
+
+		if (log_trips && log_trip_id == -1) {
+			_tripDistance = 0;
+			log_trip_id = db.newTripEntry(now, location);
+			_last_trip_update = now;
+		}
+		else if (log_trips && log_trip_id != -1 && timeDiff > 10000) {
+			db.updateTripEntry(log_trip_id, now, location, _tripDistance, false);
+			_last_trip_update = now;
 		}
 	}
 
-	private void handleTripStop() {
-		if (log_trips && isLoggingTrips) {
-			try {
-				final FileWriter w = DataManager.openWrite("TripLog.txt", true);
-				try {
-					final Date date = new Date();
-					final Locale loc = Locale.getDefault();
-					w.append(String.format(";%s;%s;%.2f", 
-							SimpleDateFormat.getDateInstance(SimpleDateFormat.SHORT, loc).format(date),
-							SimpleDateFormat.getTimeInstance(SimpleDateFormat.MEDIUM, loc).format(date),
-							_tripDistance / 1000.0f));
-					isLoggingTrips = false;
-				} finally {
-					w.close();
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	public void stopTrip() {
+		if (log_trips && log_trip_id != -1) {
+			Time now = new Time();
+			now.setToNow();
+			db.updateTripEntry(log_trip_id, now, location, _tripDistance, true);
+			log_trip_id = -1;
+			_tripDistance = 0;
 		}
 	}
 }

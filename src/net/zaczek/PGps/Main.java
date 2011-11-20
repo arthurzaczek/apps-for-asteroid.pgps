@@ -1,5 +1,6 @@
 package net.zaczek.PGps;
 
+import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -23,7 +24,8 @@ import android.widget.Toast;
 public class Main extends Activity {
 	private static final String TAG = "PGps";
 	private static final int MENU_PREFERENCES = 1;
-	private static final int MENU_EXIT = 2;
+	private static final int MENU_EXPORT_TRIPS = 2;
+	private static final int MENU_EXIT = 3;
 	private TextView txtStatus;
 	private TextView txtSpeed;
 	private TextView txtAccuracy;
@@ -270,7 +272,8 @@ public class Main extends Activity {
 		super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "Creating options menu");
 		menu.add(0, MENU_PREFERENCES, 0, "Settings");
-		menu.add(1, MENU_EXIT, 0, "Exit");
+		menu.add(1, MENU_EXPORT_TRIPS, 0, "Export trips");
+		menu.add(2, MENU_EXIT, 0, "Exit");
 		return true;
 	}
 
@@ -281,6 +284,11 @@ public class Main extends Activity {
 		switch (itemId) {
 		case MENU_PREFERENCES:
 			startActivityForResult(new Intent(this, Preferences.class), 0);
+			return true;
+		case MENU_EXPORT_TRIPS:
+			if(_service != null)
+				_service.stopTrip();
+			DataManager.exportTrips(this);
 			return true;
 		case MENU_EXIT:
 			finish();

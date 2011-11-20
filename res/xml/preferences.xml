@@ -57,7 +57,7 @@
             android:key="log_trips"
             android:title="Log trips"
             android:summary="Log the start, end and distance of the current trip"
-            android:defaultValue="false" />
+            android:defaultValue="true" />
 	<ListPreference
             android:key="record_positions"
             android:title="Record position"
