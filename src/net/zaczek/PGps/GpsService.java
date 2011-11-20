@@ -1,5 +1,9 @@
 package net.zaczek.PGps;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.DatabaseManager;
 
 import android.app.Service;
@@ -36,7 +40,6 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private MediaPlayer mp;
 	private DatabaseManager db;
 
-
 	private LocationManager locationManager;
 	private GpsStatus status = null;
 	private Location location = null;
@@ -51,6 +54,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private Time _time = new Time();
 	private float _distance = 0;
 	private float _tripDistance = 0;
+	private Timer _updateTripTimer;
 
 	private int _maxSatellites = 0;
 	private int _satellitesInFix = 0;
@@ -58,6 +62,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private boolean log_trips = false;
 	private long log_trip_id = -1;
 	private Time _last_trip_update = new Time();
+
+	class UpdateTimeTask extends TimerTask {
+		public void run() {
+			DataManager.updateTripsGeoLocations(getApplicationContext());
+		}
+	}
 
 	public void registerUpdateListener(Handler h) {
 		synchronized (lock) {
@@ -147,7 +157,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 				wl.acquire();
 			}
 		}
-		
+
 		db = new DatabaseManager(getApplicationContext());
 
 		mp = new MediaPlayer();
@@ -170,6 +180,15 @@ public class GpsService extends Service implements LocationListener, Listener {
 				.getDefaultSharedPreferences(this);
 
 		log_trips = sharedPreferences.getBoolean("log_trips", true);
+		if (log_trips) {
+			if (_updateTripTimer == null) {
+				_updateTripTimer = new Timer();
+				_updateTripTimer.schedule(new UpdateTimeTask(), 10000, 60000);
+			}
+		} else if(_updateTripTimer != null) {
+			_updateTripTimer.cancel();
+			_updateTripTimer = null;
+		}
 	}
 
 	private void initLocationManager() {
@@ -220,6 +239,11 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onDestroy() {
 		stopTrip();
 
+		if(_updateTripTimer != null) {
+			_updateTripTimer.cancel();
+			_updateTripTimer = null;
+		}
+		
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
 			locationManager = null;
@@ -309,7 +333,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 	}
 
 	public void updateTrip() {
-		if(location == null) return;
+		if (location == null)
+			return;
 		Time now = new Time();
 		now.setToNow();
 		long timeDiff = now.toMillis(true) - _last_trip_update.toMillis(true);
@@ -318,8 +343,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			_tripDistance = 0;
 			log_trip_id = db.newTripEntry(now, location);
 			_last_trip_update = now;
-		}
-		else if (log_trips && log_trip_id != -1 && timeDiff > 10000) {
+		} else if (log_trips && log_trip_id != -1 && timeDiff > 10000) {
 			db.updateTripEntry(log_trip_id, now, location, _tripDistance, false);
 			_last_trip_update = now;
 		}

@@ -55,7 +55,7 @@ public class DataManager {
 		return line;
 	}
 
-	public static void updateTripsGeoLocations(Context context) {
+	public static synchronized void updateTripsGeoLocations(Context context) {
 		Geocoder geocoder = new Geocoder(context, Locale.getDefault());
 		DatabaseManager db = new DatabaseManager(context);
 		try {

@@ -3,6 +3,8 @@ package net.zaczek.PGps;
 import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +42,8 @@ public class Main extends Activity {
 	public final static int MODE_LAT_LON = 2;
 	public final static int MODE_DISTANCE = 3;
 	public final static int MODES = 4;
+
+	private static final int DLG_WAIT_EXPORT_TRIPS = 1;
 
 	private int currentMode = MODE_POI;
 
@@ -244,7 +248,8 @@ public class Main extends Activity {
 			case MODE_DISTANCE:
 				if (_service != null) {
 					_service.clearDistance();
-					Toast.makeText(this, "Distance cleared", Toast.LENGTH_LONG).show();
+					Toast.makeText(this, "Distance cleared", Toast.LENGTH_LONG)
+							.show();
 				}
 				updateGps();
 				break;
@@ -286,9 +291,14 @@ public class Main extends Activity {
 			startActivityForResult(new Intent(this, Preferences.class), 0);
 			return true;
 		case MENU_EXPORT_TRIPS:
-			if(_service != null)
+			if (_service != null)
 				_service.stopTrip();
-			DataManager.exportTrips(this);
+			showDialog(DLG_WAIT_EXPORT_TRIPS);
+			try {
+				DataManager.exportTrips(this);
+			} finally {
+				dismissDialog(DLG_WAIT_EXPORT_TRIPS);
+			}
 			return true;
 		case MENU_EXIT:
 			finish();
@@ -297,11 +307,24 @@ public class Main extends Activity {
 
 		return super.onMenuItemSelected(featureId, item);
 	}
-	
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if(_service != null)
+		if (_service != null)
 			_service.loadPreferences();
+	}
+
+	protected Dialog onCreateDialog(int id) {
+		ProgressDialog dialog;
+		switch (id) {
+		case DLG_WAIT_EXPORT_TRIPS:
+			dialog = new ProgressDialog(this);
+			dialog.setMessage("Exporting Trips");
+			break;
+		default:
+			dialog = null;
+		}
+		return dialog;
 	}
 }
