@@ -95,12 +95,37 @@ public class DatabaseManager {
 				db.close();
 		}
 	}
+	
+	public void updateTripAddress(long log_trip_id, String address,
+			boolean updateStart) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		try {
+			ContentValues vals = new ContentValues();
+			if(updateStart)
+				vals.put(COL_TRIPS_START_ADR, address);
+			else 
+				vals.put(COL_TRIPS_END_ADR, address);
+			db.update(TRIPS_TABLE_NAME, vals,
+					DatabaseHelper.COL_ID + " = " + log_trip_id, null);	
+		} finally {
+			if (db != null)
+				db.close();
+		}
+	}
+
 
 	public Cursor getExportableTrips() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
 				COL_TRIPS_IS_RECORDING + "=0", null, null, null,
 				COL_TRIPS_START + " ASC");		
+	}
+	
+	public Cursor getTripsToGeocode() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
+				COL_TRIPS_START_ADR + " is null OR " + COL_TRIPS_END_ADR + " is null", null, null, null,
+				null);	
 	}
 	
 	public void deleteExportedTrips() {
@@ -121,5 +146,5 @@ public class DatabaseManager {
 		qb.setTables(table);
 		return qb.query(db, projectionIn, selection, selectionArgs, groupBy,
 				having, sortOrder);
-	}
+	}	
 }
