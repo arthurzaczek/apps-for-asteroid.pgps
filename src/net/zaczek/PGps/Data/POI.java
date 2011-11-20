@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 import android.location.Location;
@@ -101,7 +102,7 @@ public class POI {
 		_pois.add(poi);
 
 		try {
-			final FileWriter writer = DataManager.openWrite("POI.txt", true);
+			final OutputStreamWriter writer = DataManager.openWrite("POI.txt", true);
 			try {
 				final BufferedWriter out = new BufferedWriter(writer);
 				out.write(String.format("\n%s: %s,%s", 

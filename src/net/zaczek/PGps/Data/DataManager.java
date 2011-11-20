@@ -2,9 +2,11 @@ package net.zaczek.PGps.Data;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,7 +32,7 @@ public class DataManager {
 		return new FileReader(file);
 	}
 
-	public static FileWriter openWrite(String name, boolean append)
+	public static OutputStreamWriter openWrite(String name, boolean append)
 			throws IOException {
 		File root = Environment.getExternalStorageDirectory();
 		File dir = new File(root, "PGps");
@@ -39,7 +41,10 @@ public class DataManager {
 		if (!file.exists()) {
 			file.createNewFile();
 		}
-		return new FileWriter(file, append);
+		OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file, append), "UTF-8");
+		if(append == false)
+			out.write('\ufeff');
+		return out;
 	}
 
 	public static String readLine(BufferedReader in) throws IOException {
@@ -104,7 +109,7 @@ public class DataManager {
 		DatabaseManager db = new DatabaseManager(context);
 		try {
 			Cursor c = null;
-			FileWriter w = null;
+			OutputStreamWriter w = null;
 			try {
 				Time now = new Time();
 				now.setToNow();
