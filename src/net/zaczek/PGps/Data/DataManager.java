@@ -8,8 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.Locale;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.location.Address;

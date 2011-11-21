@@ -2,16 +2,42 @@ package net.zaczek.PGps;
 
 import net.zaczek.PGps.Data.DatabaseManager;
 import android.app.ListActivity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.format.Time;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.SimpleCursorAdapter;
 
 public class Trips extends ListActivity {
+	private static final int MENU_BACK = 1;
+	private static final int MENU_EXPORT_TRIPS = 2;
+	
+	private GpsService _service;
+
+	private ServiceConnection mConnection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			_service = ((GpsService.LocalBinder) service).getService();
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			_service = null;
+		}
+	};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		GpsService.start(getApplicationContext());
+		bindService(new Intent(this, GpsService.class), mConnection,
+				Context.BIND_AUTO_CREATE);
 
 		DatabaseManager db = new DatabaseManager(this);
 		Cursor cursor = db.getAllTrips();
@@ -43,5 +69,34 @@ public class Trips extends ListActivity {
 
 		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.list_trips_row, cw, projection, ids);
 		setListAdapter(adapter);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		unbindService(mConnection);
+		super.onDestroy();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		menu.add(0, MENU_BACK, 0, "Back");
+		menu.add(1, MENU_EXPORT_TRIPS, 0, "Export trips");
+		return true;
+	}
+
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		int itemId = item.getItemId();
+		switch (itemId) {
+		case MENU_BACK:
+			finish();
+			return true;
+		case MENU_EXPORT_TRIPS:
+			new ExportTripsTask(this, _service).execute();
+			return true;
+		}
+
+		return super.onMenuItemSelected(featureId, item);
 	}
 }
