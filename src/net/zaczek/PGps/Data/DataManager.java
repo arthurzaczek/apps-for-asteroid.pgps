@@ -13,7 +13,7 @@ import java.util.Locale;
 import android.content.Context;
 import android.database.Cursor;
 import android.location.Address;
-import android.location.Geocoder;
+import com.parrot.parrotmaps.geocoding.Geocoder;
 import android.location.Location;
 import android.os.Environment;
 import android.text.format.Time;
@@ -56,7 +56,7 @@ public class DataManager {
 	}
 
 	public static synchronized void updateTripsGeoLocations(Context context) {
-		Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+		Geocoder geocoder = new Geocoder(context);
 		DatabaseManager db = new DatabaseManager(context);
 		try {
 			Cursor c = null;
@@ -120,7 +120,7 @@ public class DataManager {
 			c = db.getExportableTrips();
 			String name = "Trips-" + now.format("%Y%m%d-%H%M%S") + ".csv";
 			w = openWrite(name, false);
-			w.append("start date;start time;end date;end time;start location;end location;start address;end address;distance\n");
+			w.append("start date;start time;end date;end time;start location;end location;start address;end address;distance (km)\n");
 			while (c.moveToNext()) {
 				Time start = new Time();
 				start.set(c.getLong(DatabaseManager.COL_IDX_TRIPS_START));
@@ -147,8 +147,8 @@ public class DataManager {
 				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_ADR)
 						+ ";");
 
-				w.append(Float.toString(c
-						.getFloat(DatabaseManager.COL_IDX_TRIPS_DISTANCE)));
+				float dist = c.getFloat(DatabaseManager.COL_IDX_TRIPS_DISTANCE);
+				w.append(String.format("%.2f", dist / 1000.0f));
 				w.append("\n");
 			}
 			w.flush();
