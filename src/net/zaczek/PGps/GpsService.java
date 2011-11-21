@@ -255,6 +255,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 			mp.reset();
 			mp.release();
 		}
+		
+		db.close();
 		super.onDestroy();
 	}
 

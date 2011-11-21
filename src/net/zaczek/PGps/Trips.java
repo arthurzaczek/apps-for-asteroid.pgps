@@ -20,6 +20,7 @@ public class Trips extends ListActivity {
 	private static final int MENU_EXPORT_TRIPS = 2;
 	
 	private GpsService _service;
+	private DatabaseManager db;
 
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -39,7 +40,7 @@ public class Trips extends ListActivity {
 		bindService(new Intent(this, GpsService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
 
-		DatabaseManager db = new DatabaseManager(this);
+		db = new DatabaseManager(this);
 		Cursor cursor = db.getAllTrips();
 		startManagingCursor(cursor);
 
@@ -74,6 +75,7 @@ public class Trips extends ListActivity {
 	@Override
 	protected void onDestroy() {
 		unbindService(mConnection);
+		db.close();
 		super.onDestroy();
 	}
 	

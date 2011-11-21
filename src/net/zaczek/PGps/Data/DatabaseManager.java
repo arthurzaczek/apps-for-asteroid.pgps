@@ -48,109 +48,88 @@ public class DatabaseManager {
 	};
 
 	private DatabaseHelper dbHelper;
+	private SQLiteDatabase db;
 
 	public DatabaseManager(Context ctx) {
 		dbHelper = new DatabaseHelper(ctx);
+		db = dbHelper.getWritableDatabase();
+	}
+
+	public void close() {
+		if (db != null)
+			db.close();
 	}
 
 	public long newTripEntry(Time start, Location loc) {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		try {
-			ContentValues vals = new ContentValues();
+		ContentValues vals = new ContentValues();
+		vals.put(COL_TRIPS_IS_RECORDING, 0);
+		db.update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + " = 1", null);
+
+		vals = new ContentValues();
+		vals.put(COL_TRIPS_START, start.toMillis(true));
+		vals.put(COL_TRIPS_START_LOC_LAT,
+				Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
+		vals.put(COL_TRIPS_START_LOC_LON,
+				Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
+		vals.put(COL_TRIPS_IS_RECORDING, 1);
+		long rowId = db.insertOrThrow(TRIPS_TABLE_NAME, null, vals);
+		return rowId;
+	}
+
+	public void updateTripEntry(long log_trip_id, Time end, Location loc,
+			float distance, boolean endLogging) {
+		ContentValues vals = new ContentValues();
+		vals.put(COL_TRIPS_END, end.toMillis(true));
+		vals.put(COL_TRIPS_END_LOC_LAT,
+				Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
+		vals.put(COL_TRIPS_END_LOC_LON,
+				Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
+		vals.put(COL_TRIPS_DISTANCE, distance);
+		if (endLogging == true)
 			vals.put(COL_TRIPS_IS_RECORDING, 0);
-			db.update(TRIPS_TABLE_NAME, vals,
-					COL_TRIPS_IS_RECORDING + " = 1", null);
-			
-			vals = new ContentValues();
-			vals.put(COL_TRIPS_START, start.toMillis(true));
-			vals.put(COL_TRIPS_START_LOC_LAT, Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
-			vals.put(COL_TRIPS_START_LOC_LON, Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
-			vals.put(COL_TRIPS_IS_RECORDING, 1);
-			long rowId = db.insertOrThrow(TRIPS_TABLE_NAME, null,
-					vals);
-			return rowId;
-
-		} finally {
-			if (db != null)
-				db.close();
-		}
+		db.update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+				+ log_trip_id, null);
 	}
 
-	public void updateTripEntry(long log_trip_id, Time end, Location loc, float distance,
-			boolean endLogging) {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		try {
-			ContentValues vals = new ContentValues();
-			vals.put(COL_TRIPS_END, end.toMillis(true));
-			vals.put(COL_TRIPS_END_LOC_LAT, Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
-			vals.put(COL_TRIPS_END_LOC_LON, Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
-			vals.put(COL_TRIPS_DISTANCE, distance);
-			if(endLogging == true)
-				vals.put(COL_TRIPS_IS_RECORDING, 0);
-			db.update(TRIPS_TABLE_NAME, vals,
-					DatabaseHelper.COL_ID + " = " + log_trip_id, null);	
-		} finally {
-			if (db != null)
-				db.close();
-		}
-	}
-	
 	public void updateTripAddress(long log_trip_id, String address,
 			boolean updateStart) {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		try {
-			ContentValues vals = new ContentValues();
-			if(updateStart)
-				vals.put(COL_TRIPS_START_ADR, address);
-			else 
-				vals.put(COL_TRIPS_END_ADR, address);
-			db.update(TRIPS_TABLE_NAME, vals,
-					DatabaseHelper.COL_ID + " = " + log_trip_id, null);	
-		} finally {
-			if (db != null)
-				db.close();
-		}
+		ContentValues vals = new ContentValues();
+		if (updateStart)
+			vals.put(COL_TRIPS_START_ADR, address);
+		else
+			vals.put(COL_TRIPS_END_ADR, address);
+		db.update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+				+ log_trip_id, null);
 	}
-
 
 	public Cursor getExportableTrips() {
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
 				COL_TRIPS_IS_RECORDING + "=0", null, null, null,
-				COL_TRIPS_START + " ASC");		
+				COL_TRIPS_START + " ASC");
 	}
-	
+
 	public Cursor getAllTrips() {
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
-				null, null, null, null,
-				COL_TRIPS_START + " DESC");		
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, null, null,
+				null, null, COL_TRIPS_START + " DESC");
 	}
-	
+
 	public Cursor getTripsToGeocode() {
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
-				COL_TRIPS_START_ADR + " is null OR " + COL_TRIPS_END_ADR + " is null", null, null, null,
-				null);	
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
+				COL_TRIPS_START_ADR + " is null OR " + COL_TRIPS_END_ADR
+						+ " is null", null, null, null, null);
 	}
-	
+
 	public void deleteExportedTrips() {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		try {
-			db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);	
-		} finally {
-			if (db != null)
-				db.close();
-		}
+		db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
+
 	}
-	
-	private Cursor getCursor(SQLiteDatabase db, String table, String[] projectionIn,
-			String selection, String[] selectionArgs, String groupBy,
-			String having, String sortOrder)
-	{
+
+	private Cursor getCursor(SQLiteDatabase db, String table,
+			String[] projectionIn, String selection, String[] selectionArgs,
+			String groupBy, String having, String sortOrder) {
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 		qb.setTables(table);
 		return qb.query(db, projectionIn, selection, selectionArgs, groupBy,
 				having, sortOrder);
-	}	
+	}
 }
