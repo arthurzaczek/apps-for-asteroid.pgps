@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/RelativeLayout01" android:layout_width="fill_parent"
+  android:layout_height="wrap_content" android:padding="5sp" android:textSize="20sp"
+  >
+  <TextView 
+    android:id="@+id/list_trips_start" 
+  	android:layout_height="wrap_content"
+    android:layout_width="wrap_content"
+    android:textStyle="bold"    
+    android:text="12:21:33 31 December 2011"></TextView>
+  <TextView 
+    android:id="@+id/list_trips_end"
+  	android:layout_width="wrap_content"
+    android:layout_height="wrap_content" 
+    android:text="12:41:33 31 December 2011"
+    android:textStyle="bold"
+    android:layout_below="@+id/list_trips_start"></TextView>
+  <TextView 
+    android:id="@+id/list_trips_distance"
+  	android:layout_height="wrap_content"
+    android:layout_width="wrap_content" 
+    android:text="999 km"
+    android:textStyle="bold"
+    android:textSize="26sp"
+    android:gravity="right"
+    android:layout_alignParentRight="true"    
+    android:layout_toRightOf="@+id/list_trips_start" ></TextView>
+    
+  <TextView 
+    android:id="@+id/list_trips_start_adr"
+  	android:layout_width="wrap_content"
+    android:layout_height="wrap_content" 
+    android:text="Somewhere in the North or West, I can' remember exactly"
+    android:layout_below="@+id/list_trips_end"></TextView>
+  <TextView 
+    android:id="@+id/list_trips_end_adr"
+	android:layout_width="wrap_content" 
+  	android:layout_height="wrap_content"
+	android:text="Somewhere in the South or East, I can' remember exactly"
+    android:layout_below="@+id/list_trips_start_adr"
+    ></TextView>
+</RelativeLayout>

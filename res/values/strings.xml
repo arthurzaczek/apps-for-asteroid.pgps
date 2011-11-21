@@ -2,4 +2,5 @@
 <resources>
     <string name="hello">Hello World, Main!</string>
     <string name="app_name">PGps</string>
+    <string name="trips">Trips</string>
 </resources>

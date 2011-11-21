@@ -11,6 +11,7 @@
                 <category android:name="parrot.CATEGORY" />
 			</intent-filter>
 		</activity>
+		<activity android:name=".Trips" android:label="@string/trips" />
         <activity android:name=".Preferences"
                   android:label="Preferences" />
 		<service android:name=".GpsService" />

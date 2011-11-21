@@ -120,6 +120,13 @@ public class DatabaseManager {
 				COL_TRIPS_START + " ASC");		
 	}
 	
+	public Cursor getAllTrips() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
+				null, null, null, null,
+				COL_TRIPS_START + " DESC");		
+	}
+	
 	public Cursor getTripsToGeocode() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, 
