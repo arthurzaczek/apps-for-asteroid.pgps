@@ -2,6 +2,7 @@ package net.zaczek.PGps;
 
 import java.io.IOException;
 
+import net.zaczek.PGps.Data.DatabaseManager;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -50,6 +51,7 @@ public class Main extends Activity {
 	private boolean show_last_without_fix = false;
 
 	private GpsService _service;
+	private DatabaseManager db;
 
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -68,6 +70,8 @@ public class Main extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		
+		db = DatabaseManager.getInstance(getApplicationContext());
 
 		GpsService.start(getApplicationContext());
 		bindService(new Intent(this, GpsService.class), mConnection,
@@ -296,7 +300,7 @@ public class Main extends Activity {
 			startActivityForResult(new Intent(this, Preferences.class), 0);
 			return true;
 		case MENU_EXPORT_TRIPS:
-			new ExportTripsTask(this, _service).execute();
+			new ExportTripsTask(this, _service, db).execute();
 			return true;
 		case MENU_SHOW_TRIPS:
 			startActivity(new Intent(this, Trips.class));

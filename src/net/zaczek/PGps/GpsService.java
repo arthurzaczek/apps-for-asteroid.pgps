@@ -63,7 +63,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	class UpdateTimeTask extends TimerTask {
 		public void run() {
-			DataManager.updateTripsGeoLocations(getApplicationContext());
+			DataManager.updateTripsGeoLocations(getApplicationContext(), db);
 		}
 	}
 
@@ -156,7 +156,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			}
 		}
 
-		db = new DatabaseManager(getApplicationContext());
+		db = DatabaseManager.getInstance(getApplicationContext());
 
 		mp = new MediaPlayer();
 		mp.setOnPreparedListener(new OnPreparedListener() {
@@ -255,8 +255,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			mp.reset();
 			mp.release();
 		}
-		
-		db.close();
+				
 		super.onDestroy();
 	}
 

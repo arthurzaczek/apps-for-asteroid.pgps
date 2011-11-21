@@ -53,9 +53,8 @@ public class DataManager {
 		return line;
 	}
 
-	public static synchronized void updateTripsGeoLocations(Context context) {
+	public static synchronized void updateTripsGeoLocations(Context context, DatabaseManager db) {
 		Geocoder geocoder = new Geocoder(context);
-		DatabaseManager db = new DatabaseManager(context);
 		try {
 			Cursor c = null;
 			FileWriter w = null;
@@ -77,7 +76,6 @@ public class DataManager {
 					c.close();
 				if (w != null)
 					w.close();
-				db.close();
 			}
 		} catch (Exception ex) {
 			Log.e("PGps", "Unable to update geo locations", ex);
@@ -107,9 +105,8 @@ public class DataManager {
 		}
 	}
 
-	public static void exportTrips(Context context) throws IOException {
-		updateTripsGeoLocations(context);
-		DatabaseManager db = new DatabaseManager(context);
+	public static void exportTrips(Context context, DatabaseManager db) throws IOException {
+		updateTripsGeoLocations(context, db);
 		Cursor c = null;
 		OutputStreamWriter w = null;
 		try {
@@ -151,8 +148,7 @@ public class DataManager {
 			}
 			w.flush();
 			// db.deleteExportedTrips();			
-		} finally {
-			db.close();
+		} finally {			
 			if (c != null)
 				c.close();
 			if (w != null)

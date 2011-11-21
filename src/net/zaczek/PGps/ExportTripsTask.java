@@ -16,10 +16,12 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 	private Context _context;
 	private GpsService _service;
 	private ProgressDialog progressDialog;
+	private DatabaseManager _db;
 
-	public ExportTripsTask(Context context, GpsService service) {
+	public ExportTripsTask(Context context, GpsService service, DatabaseManager db) {
 		_context = context;
 		_service = service;
+		_db = db;
 		progressDialog = new ProgressDialog(context);
 	}
 
@@ -28,7 +30,7 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 		if (_service != null)
 			_service.stopTrip();
 		try {
-			DataManager.exportTrips(_context);
+			DataManager.exportTrips(_context, _db);
 			return true;
 		} catch (IOException e) {
 			Log.e("PGps", "Unable to export Trips", e);
@@ -54,20 +56,14 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 			AlertDialog alertDialog = new AlertDialog.Builder(_context)
 					.setTitle("Trips exported to SD Card")
 					.setMessage("Clear local Trip Database?")
-					.setPositiveButton(AlertDialog.BUTTON_POSITIVE,
+					.setPositiveButton("Yes",
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
-										int which) {
-									DatabaseManager db = new DatabaseManager(
-											_context);
-									try {
-									db.deleteExportedTrips();
-									} finally {
-										db.close();
-									}
+										int which) {									
+									_db.deleteExportedTrips();
 								}
 							})
-					.setNegativeButton(AlertDialog.BUTTON_NEGATIVE,
+					.setNegativeButton("No",
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {

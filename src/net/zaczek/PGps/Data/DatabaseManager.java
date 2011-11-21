@@ -50,14 +50,22 @@ public class DatabaseManager {
 	private DatabaseHelper dbHelper;
 	private SQLiteDatabase db;
 
-	public DatabaseManager(Context ctx) {
+	private DatabaseManager(Context ctx) {
 		dbHelper = new DatabaseHelper(ctx);
 		db = dbHelper.getWritableDatabase();
 	}
+	
+	private static DatabaseManager _single; 
+	public static synchronized DatabaseManager getInstance(Context ctx) {
+		if(_single == null) {
+			_single = new DatabaseManager(ctx);
+		}
+		return _single;
+	}
 
-	public void close() {
-		if (db != null)
-			db.close();
+	public static synchronized void terminate() {
+		if (_single != null)
+			_single.db.close();
 	}
 
 	public long newTripEntry(Time start, Location loc) {

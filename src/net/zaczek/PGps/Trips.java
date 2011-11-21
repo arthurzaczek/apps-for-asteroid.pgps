@@ -21,6 +21,8 @@ public class Trips extends ListActivity {
 	
 	private GpsService _service;
 	private DatabaseManager db;
+	private SimpleCursorAdapter adapter;
+	private Cursor cursor;
 
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -40,8 +42,8 @@ public class Trips extends ListActivity {
 		bindService(new Intent(this, GpsService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
 
-		db = new DatabaseManager(this);
-		Cursor cursor = db.getAllTrips();
+		db = DatabaseManager.getInstance(getApplicationContext());
+		cursor = db.getAllTrips();
 		startManagingCursor(cursor);
 
 		String[] projection = new String[] { DatabaseManager.COL_TRIPS_START, DatabaseManager.COL_TRIPS_END, DatabaseManager.COL_TRIPS_DISTANCE, DatabaseManager.COL_TRIPS_START_ADR, DatabaseManager.COL_TRIPS_END_ADR };
@@ -68,14 +70,13 @@ public class Trips extends ListActivity {
 			}
 		};
 
-		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.list_trips_row, cw, projection, ids);
+		adapter = new SimpleCursorAdapter(this, R.layout.list_trips_row, cw, projection, ids);
 		setListAdapter(adapter);
 	}
 	
 	@Override
 	protected void onDestroy() {
 		unbindService(mConnection);
-		db.close();
 		super.onDestroy();
 	}
 	
@@ -95,7 +96,8 @@ public class Trips extends ListActivity {
 			finish();
 			return true;
 		case MENU_EXPORT_TRIPS:
-			new ExportTripsTask(this, _service).execute();
+			new ExportTripsTask(this, _service, db).execute();
+			cursor.requery();
 			return true;
 		}
 
