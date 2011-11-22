@@ -9,11 +9,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.Address;
 import com.parrot.parrotmaps.geocoding.Geocoder;
 import android.location.Location;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -29,8 +31,7 @@ public class DataManager {
 		return new FileReader(file);
 	}
 
-	public static OutputStreamWriter openWrite(String name, boolean append)
-			throws IOException {
+	public static OutputStreamWriter openWrite(String name, boolean append) throws IOException {
 		File root = Environment.getExternalStorageDirectory();
 		File dir = new File(root, "PGps");
 		dir.mkdir();
@@ -38,8 +39,7 @@ public class DataManager {
 		if (!file.exists()) {
 			file.createNewFile();
 		}
-		OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(
-				file, append), "UTF-8");
+		OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file, append), "UTF-8");
 		if (append == false)
 			out.write('\ufeff');
 		return out;
@@ -61,13 +61,11 @@ public class DataManager {
 			try {
 				c = db.getTripsToGeocode();
 				while (c.moveToNext()) {
-					final long log_trip_id = c
-							.getLong(DatabaseHelper.COL_IDX_ID);
+					final long log_trip_id = c.getLong(DatabaseHelper.COL_IDX_ID);
 					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_ADR)) {
 						updateAddress(geocoder, db, c, log_trip_id, true);
 					}
-					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR)
-							&& c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR) && c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
 						updateAddress(geocoder, db, c, log_trip_id, false);
 					}
 				}
@@ -82,16 +80,9 @@ public class DataManager {
 		}
 	}
 
-	private static void updateAddress(Geocoder geocoder, DatabaseManager db,
-			Cursor c, long log_trip_id, boolean updateStart) throws IOException {
-		final double lat = Location.convert(c.getString(
-				updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT
-						: DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT).replace(
-				',', '.'));
-		final double lng = Location.convert(c.getString(
-				updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LON
-						: DatabaseManager.COL_IDX_TRIPS_END_LOC_LON).replace(
-				',', '.'));
+	private static void updateAddress(Geocoder geocoder, DatabaseManager db, Cursor c, long log_trip_id, boolean updateStart) throws IOException {
+		final double lat = Location.convert(c.getString(updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT : DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT).replace(',', '.'));
+		final double lng = Location.convert(c.getString(updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LON : DatabaseManager.COL_IDX_TRIPS_END_LOC_LON).replace(',', '.'));
 		final List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
 		if (addresses != null && addresses.size() > 0) {
 			final StringBuilder sb = new StringBuilder();
@@ -106,6 +97,17 @@ public class DataManager {
 	}
 
 	public static void exportTrips(Context context, DatabaseManager db) throws IOException {
+		// http://code.google.com/p/android/issues/detail?id=2626
+		SharedPreferences prefs = PreferenceManager
+			.getDefaultSharedPreferences(context);
+		char decimal = '.';
+		char decimalToReplace = ',';
+		
+		if(prefs.getBoolean("use_comma_as_decimal_seperator", true)) {
+			decimal = ',';
+			decimalToReplace = '.';			
+		}
+		
 		db.deleteShortTrips();
 		updateTripsGeoLocations(context, db);
 		Cursor c = null;
@@ -128,33 +130,32 @@ public class DataManager {
 				w.append(end.format("%Y-%m-%d") + ";");
 				w.append(end.format("%H:%M:%S") + ";");
 
-				w.append(c
-						.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT)
-						+ ","
-						+ c.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LON)
-						+ ";");
-				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT)
-						+ ","
-						+ c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LON)
-						+ ";");
+				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT) + "," + c.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LON) + ";");
+				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT) + "," + c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LON) + ";");
 
-				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_START_ADR)
-						+ ";");
-				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_ADR)
-						+ ";");
+				if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_ADR)) {
+					w.append("-;");
+
+				} else {
+					w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_START_ADR).replace("\"", "\"\"") + ";");
+				}
+				if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR)) {
+					w.append("-;");
+
+				} else {
+					w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_ADR).replace("\"", "\"\"") + ";");
+				}
 
 				float dist = c.getFloat(DatabaseManager.COL_IDX_TRIPS_DISTANCE);
-				w.append(String.format("%.2f", dist / 1000.0f));
+				w.append(String.format("%.2f", dist / 1000.0f).replace(decimalToReplace, decimal));
 				w.append("\n");
 			}
 			w.flush();
-			// db.deleteExportedTrips();			
-		} finally {			
+		} finally {
 			if (c != null)
 				c.close();
 			if (w != null)
 				w.close();
 		}
-
 	}
 }

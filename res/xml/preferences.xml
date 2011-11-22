@@ -65,4 +65,10 @@
             android:defaultValue="0"
             android:entries="@array/recPosNames"
             android:entryValues="@array/recPosValues" />    
+	<CheckBoxPreference
+            android:key="use_comma_as_decimal_seperator"
+            android:title="Decimal seperator"
+            android:summaryOn="Use ',' as decimal seperator"
+            android:summaryOff="Use '.' as decimal seperator"
+            android:defaultValue="true" />            
 </PreferenceScreen>

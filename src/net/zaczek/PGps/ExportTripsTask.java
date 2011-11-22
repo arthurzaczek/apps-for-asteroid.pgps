@@ -1,8 +1,6 @@
 package net.zaczek.PGps;
 
 import java.io.IOException;
-import java.util.EventListener;
-
 import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.DatabaseManager;
 import android.app.AlertDialog;
