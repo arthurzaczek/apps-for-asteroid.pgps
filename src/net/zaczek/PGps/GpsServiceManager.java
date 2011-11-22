@@ -10,9 +10,16 @@ public class GpsServiceManager extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if ("android.intent.action.BOOT_COMPLETED".equals(intent.getAction())) {
+		final String action = intent.getAction();
+		if ("android.intent.action.BOOT_COMPLETED".equals(action)) {
 			Log.e(TAG, "Received BOOT_COMPLETED " + intent.toString());
 			GpsService.start(context);
+		} else if ("com.parrot.asteroid.WakeUp".equals(action)) {
+			Log.e(TAG, "Received WakeUp " + intent.toString());
+			GpsService.start(context);
+		} else if ("com.parrot.asteroid.StandBy".equals(action)) {
+			Log.e(TAG, "Received StandBy " + intent.toString());
+			GpsService.stop(context);
 		} else {
 			Log.e(TAG, "Received unexpected intent " + intent.toString());
 		}

@@ -16,9 +16,11 @@
                   android:label="Preferences" />
 		<service android:name=".GpsService" />
 		<receiver android:name=".GpsServiceManager"
-			android:enabled="true" android:exported="false" android:label="SyncServiceManager">
+			android:enabled="true" android:exported="false" android:label="GpsServiceManager">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="com.parrot.asteroid.WakeUp" />
+				<action android:name="com.parrot.asteroid.StandBy" />
 			</intent-filter>
 		</receiver>
 	</application>
