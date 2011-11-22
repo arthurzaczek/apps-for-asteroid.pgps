@@ -1,6 +1,7 @@
 package net.zaczek.PGps;
 
 import java.io.IOException;
+import java.util.EventListener;
 
 import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.DatabaseManager;
@@ -17,12 +18,23 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 	private GpsService _service;
 	private ProgressDialog progressDialog;
 	private DatabaseManager _db;
+	private Callback _listener;
+	
+	public interface Callback
+	{
+		void run();
+	}
 
 	public ExportTripsTask(Context context, GpsService service, DatabaseManager db) {
 		_context = context;
 		_service = service;
 		_db = db;
 		progressDialog = new ProgressDialog(context);
+	}
+	
+	public ExportTripsTask setPostListener(Callback listener) {
+		_listener = listener;
+		return this;
 	}
 
 	@Override
@@ -75,6 +87,7 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 			Toast.makeText(_context, "Unable to export Trips",
 					Toast.LENGTH_LONG).show();
 		}
+		if(_listener != null) _listener.run();
 		super.onPostExecute(result);
 	}
 }

@@ -106,6 +106,7 @@ public class DataManager {
 	}
 
 	public static void exportTrips(Context context, DatabaseManager db) throws IOException {
+		db.deleteShortTrips();
 		updateTripsGeoLocations(context, db);
 		Cursor c = null;
 		OutputStreamWriter w = null;

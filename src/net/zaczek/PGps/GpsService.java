@@ -215,6 +215,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		final float d = lastDistanceLocation.distanceTo(location);
 		if (location.hasAccuracy() && d > location.getAccuracy()) {
+		//if(true) { // just testing
 			_distance += d;
 			_tripDistance += d;
 			lastDistanceLocation = location;

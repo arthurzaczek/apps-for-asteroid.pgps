@@ -54,10 +54,11 @@ public class DatabaseManager {
 		dbHelper = new DatabaseHelper(ctx);
 		db = dbHelper.getWritableDatabase();
 	}
-	
-	private static DatabaseManager _single; 
+
+	private static DatabaseManager _single;
+
 	public static synchronized DatabaseManager getInstance(Context ctx) {
-		if(_single == null) {
+		if (_single == null) {
 			_single = new DatabaseManager(ctx);
 		}
 		return _single;
@@ -70,8 +71,12 @@ public class DatabaseManager {
 
 	public long newTripEntry(Time start, Location loc) {
 		ContentValues vals = new ContentValues();
+		
+		// Stop all recording
 		vals.put(COL_TRIPS_IS_RECORDING, 0);
 		db.update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + " = 1", null);
+
+		deleteShortTrips();
 
 		vals = new ContentValues();
 		vals.put(COL_TRIPS_START, start.toMillis(true));
@@ -129,7 +134,11 @@ public class DatabaseManager {
 
 	public void deleteExportedTrips() {
 		db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
+	}
 
+	public void deleteShortTrips() {
+		db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
+				+ COL_TRIPS_DISTANCE + " < 1", null);
 	}
 
 	private Cursor getCursor(SQLiteDatabase db, String table,

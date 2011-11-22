@@ -43,9 +43,16 @@ public class Trips extends ListActivity {
 				Context.BIND_AUTO_CREATE);
 
 		db = DatabaseManager.getInstance(getApplicationContext());
+		requery();
+
+		
+	}
+
+	private void requery() {
+		db.deleteShortTrips();
 		cursor = db.getAllTrips();
 		startManagingCursor(cursor);
-
+		
 		String[] projection = new String[] { DatabaseManager.COL_TRIPS_START, DatabaseManager.COL_TRIPS_END, DatabaseManager.COL_TRIPS_DISTANCE, DatabaseManager.COL_TRIPS_START_ADR, DatabaseManager.COL_TRIPS_END_ADR };
 		int[] ids = new int[] { R.id.list_trips_start, R.id.list_trips_end, R.id.list_trips_distance, R.id.list_trips_start_adr, R.id.list_trips_end_adr };
 
@@ -75,6 +82,12 @@ public class Trips extends ListActivity {
 	}
 	
 	@Override
+	protected void onResume() {
+		requery();
+		super.onResume();
+	}
+	
+	@Override
 	protected void onDestroy() {
 		unbindService(mConnection);
 		super.onDestroy();
@@ -96,8 +109,14 @@ public class Trips extends ListActivity {
 			finish();
 			return true;
 		case MENU_EXPORT_TRIPS:
-			new ExportTripsTask(this, _service, db).execute();
-			cursor.requery();
+			new ExportTripsTask(this, _service, db)
+				.setPostListener(new ExportTripsTask.Callback() {
+					@Override
+					public void run() {
+						requery();
+					}
+				})
+				.execute();
 			return true;
 		}
 
