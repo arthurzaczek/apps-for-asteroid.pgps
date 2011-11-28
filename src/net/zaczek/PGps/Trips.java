@@ -16,6 +16,8 @@ import android.view.MenuItem;
 import android.widget.SimpleCursorAdapter;
 
 public class Trips extends ListActivity {
+	private final static String TAG = "PGps";
+
 	private static final int MENU_BACK = 1;
 	private static final int MENU_EXPORT_TRIPS = 2;
 	

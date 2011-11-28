@@ -20,6 +20,8 @@ import android.text.format.Time;
 import android.util.Log;
 
 public class DataManager {
+	private final static String TAG = "PGps";
+
 	public static FileReader openRead(String name) throws IOException {
 		File root = Environment.getExternalStorageDirectory();
 		File dir = new File(root, "PGps");
@@ -54,6 +56,7 @@ public class DataManager {
 	}
 
 	public static synchronized void updateTripsGeoLocations(Context context, DatabaseManager db) {
+		Log.i(TAG, "updateTripsGeoLocations");
 		Geocoder geocoder = new Geocoder(context);
 		try {
 			Cursor c = null;
@@ -75,8 +78,9 @@ public class DataManager {
 				if (w != null)
 					w.close();
 			}
+			Log.i(TAG, "updateTripsGeoLocations finished");
 		} catch (Exception ex) {
-			Log.e("PGps", "Unable to update geo locations", ex);
+			Log.e(TAG, "Unable to update geo locations", ex);
 		}
 	}
 
@@ -92,11 +96,13 @@ public class DataManager {
 			}
 			if (sb.length() > 2)
 				sb.delete(sb.length() - 2, sb.length());
+			Log.i(TAG, "Update address: " + sb.toString());
 			db.updateTripAddress(log_trip_id, sb.toString(), updateStart);
 		}
 	}
 
 	public static void exportTrips(Context context, DatabaseManager db) throws IOException {
+		Log.i(TAG, "Exporting trips");
 		// http://code.google.com/p/android/issues/detail?id=2626
 		SharedPreferences prefs = PreferenceManager
 			.getDefaultSharedPreferences(context);

@@ -30,7 +30,7 @@ import android.util.Log;
 
 public class GpsService extends Service implements LocationListener, Listener {
 
-	private final static String TAG = "GpsService";
+	private final static String TAG = "PGps";
 	private static Object lock = new Object();
 
 	private WakeLock wl;
@@ -133,6 +133,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	public GpsService() {
 		super();
+		Log.i(TAG, "Constructing GpsService");
 	}
 
 	public static void start(Context context) {
@@ -147,6 +148,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	@Override
 	public void onStart(Intent intent, int startId) {
+		Log.i(TAG, "GpsService.onStart");
 		if (wl == null) {
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 			if (pm != null) {
@@ -170,10 +172,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		loadPreferences();
 
+		Log.i(TAG, "GpsService.onStart finished");
 		super.onStart(intent, startId);
 	}
 
 	public void loadPreferences() {
+		Log.i(TAG, "GpsService.loadPreferences");
 		SharedPreferences sharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
@@ -236,6 +240,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	@Override
 	public void onDestroy() {
+		Log.i(TAG, "GpsService.onDestroy");
 		stopTrip();
 
 		if(_updateTripTimer != null) {
@@ -257,6 +262,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			mp.release();
 		}
 				
+		Log.i(TAG, "GpsService.onDestroy finished");
 		super.onDestroy();
 	}
 

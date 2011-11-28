@@ -12,6 +12,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
+	private final static String TAG = "PGps";
+
 	private Context _context;
 	private GpsService _service;
 	private ProgressDialog progressDialog;
@@ -43,7 +45,7 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 			DataManager.exportTrips(_context, _db);
 			return true;
 		} catch (IOException e) {
-			Log.e("PGps", "Unable to export Trips", e);
+			Log.e(TAG, "Unable to export Trips", e);
 			return false;
 		}
 	}
@@ -71,14 +73,14 @@ public class ExportTripsTask extends AsyncTask<Void, Void, Boolean> {
 								public void onClick(DialogInterface dialog,
 										int which) {									
 									_db.deleteExportedTrips();
-								}
+									if(_listener != null) _listener.run();								}
 							})
 					.setNegativeButton("No",
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
 									dialog.cancel();
-								}
+									if(_listener != null) _listener.run();								}
 							}).create();
 			alertDialog.show();
 		} else {
