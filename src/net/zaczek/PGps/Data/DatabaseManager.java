@@ -7,8 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.location.Location;
 import android.text.format.Time;
+import android.util.Log;
 
 public class DatabaseManager {
+	private final static String TAG = "PGps";
+
 	public final static String TRIPS_TABLE_NAME = "Trips";
 
 	public final static String COL_TRIPS_START = "start";
@@ -68,13 +71,27 @@ public class DatabaseManager {
 		if (_single != null)
 			_single.db.close();
 	}
+	
+	private int update(String table, ContentValues values, String whereClause, String[] whereArgs) {
+		int result = db.update(table, values, whereClause, whereArgs);
+		Log.d(TAG, "Update " + table + "; WHERE: " + whereClause + "; result = " + result);
+		return result;
+	}
+	
+	private int delete(String table, String whereClause, String[] whereArgs) {
+		int result = db.delete(table, whereClause, whereArgs);
+		Log.d(TAG, "Delete from " + table + "; WHERE: " + whereClause + "; result = " + result);
+		return result;
+	}
 
+
+	
 	public long newTripEntry(Time start, Location loc) {
 		ContentValues vals = new ContentValues();
 		
 		// Stop all recording
 		vals.put(COL_TRIPS_IS_RECORDING, 0);
-		db.update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + " = 1", null);
+		update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + "=1", null);
 
 		deleteShortTrips();
 
@@ -100,7 +117,7 @@ public class DatabaseManager {
 		vals.put(COL_TRIPS_DISTANCE, distance);
 		if (endLogging == true)
 			vals.put(COL_TRIPS_IS_RECORDING, 0);
-		db.update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
 
@@ -111,7 +128,7 @@ public class DatabaseManager {
 			vals.put(COL_TRIPS_START_ADR, address);
 		else
 			vals.put(COL_TRIPS_END_ADR, address);
-		db.update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
 
@@ -133,11 +150,11 @@ public class DatabaseManager {
 	}
 
 	public void deleteExportedTrips() {
-		db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
 	}
 
 	public void deleteShortTrips() {
-		db.delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
 				+ COL_TRIPS_DISTANCE + " < 1", null);
 	}
 
