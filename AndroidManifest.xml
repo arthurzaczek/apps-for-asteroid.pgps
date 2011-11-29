@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="net.zaczek.PGps" 
-	android:versionCode="12" 
-	android:versionName="1.0.12">
+	android:versionCode="13" 
+	android:versionName="1.0.13">
 	<application android:icon="@drawable/home_icon" android:label="@string/app_name" android:theme="@android:style/Theme.Light.NoTitleBar.Fullscreen" android:debuggable="true">
 		<activity android:name=".Main" android:label="@string/app_name" android:icon="@drawable/overview_icon">
 			<intent-filter>
@@ -14,6 +14,9 @@
 		<activity android:name=".Trips" android:label="@string/trips" />
         <activity android:name=".Preferences"
                   android:label="Preferences" />
+        <activity android:name=".About"
+                  android:label="About">
+        </activity>
 		<service android:name=".GpsService" />
 		<receiver android:name=".BroadcastReceiver.BootCompleted"
 			android:enabled="true" android:exported="false" 

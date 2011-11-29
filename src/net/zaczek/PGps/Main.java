@@ -28,7 +28,8 @@ public class Main extends Activity {
 	private static final int MENU_PREFERENCES = 1;
 	private static final int MENU_EXPORT_TRIPS = 2;
 	private static final int MENU_SHOW_TRIPS = 3;
-	private static final int MENU_EXIT = 4;
+	private static final int MENU_ABOUT = 4;
+	private static final int MENU_EXIT = 5;
 	private TextView txtStatus;
 	private TextView txtSpeed;
 	private TextView txtAccuracy;
@@ -287,7 +288,8 @@ public class Main extends Activity {
 		menu.add(0, MENU_PREFERENCES, 0, "Settings");
 		menu.add(1, MENU_EXPORT_TRIPS, 0, "Export trips");
 		menu.add(2, MENU_SHOW_TRIPS, 0, "Show trips");
-		menu.add(3, MENU_EXIT, 0, "Exit");
+		menu.add(3, MENU_ABOUT, 0, "About");
+		menu.add(4, MENU_EXIT, 0, "Exit");
 		return true;
 	}
 
@@ -304,6 +306,9 @@ public class Main extends Activity {
 			return true;
 		case MENU_SHOW_TRIPS:
 			startActivity(new Intent(this, Trips.class));
+			return true;
+		case MENU_ABOUT:
+			startActivity(new Intent(this, About.class));
 			return true;
 		case MENU_EXIT:
 			finish();
