@@ -15,11 +15,24 @@
         <activity android:name=".Preferences"
                   android:label="Preferences" />
 		<service android:name=".GpsService" />
-		<receiver android:name=".GpsServiceManager"
-			android:enabled="true" android:exported="false" android:label="GpsServiceManager">
+		<receiver android:name=".BroadcastReceiver.BootCompleted"
+			android:enabled="true" android:exported="false" 
+			android:label="BootCompleted">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
+			</intent-filter>
+		</receiver>
+		<receiver android:name=".BroadcastReceiver.WakeUp"
+			android:enabled="true" android:exported="false" 
+			android:label="WakeUp">
+			<intent-filter>
 				<action android:name="com.parrot.asteroid.WakeUp" />
+			</intent-filter>
+		</receiver>
+		<receiver android:name=".BroadcastReceiver.StandBy"
+			android:enabled="true" android:exported="false" 
+			android:label="StandBy">
+			<intent-filter>
 				<action android:name="com.parrot.asteroid.StandBy" />
 			</intent-filter>
 		</receiver>
