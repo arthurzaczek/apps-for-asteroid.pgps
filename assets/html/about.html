@@ -1,5 +1,5 @@
 <h1>Introduction</h1>
-<p>GPS Tool for the Asteroid. </p>
+<p>GPS Tool for the Asteroid.</p>
 <p>Note: this is a simple App for your car - no fancy UI, no editing. It&#x27;s a Car Radio App and not a Smartphone App. </p>
 <h1>Installation</h1>
 <ul>
@@ -7,7 +7,56 @@
 <li>Edit configuration in /PGps </li>
 </ul>
 
-<h1>Licence</h1>
+<h2>POI.txt</h2>
+POI contains your points of interest. They will be shown on the "distance to POI" screen. The format is:
+<pre>
+Vienna: 48.208402,16.373835
+Berlin: 52.5016,13.4023
+</pre>
+
+<h1>Features</h1>
+<h2>Common</h2>
+<p>
+The main screen shows the current satellite status, current accuracy and current speed. 
+If there is no GPS fix "no fix" will be shown. (this can be changed in the settings screen).
+</p>
+<p>
+You can change the screens by using the wheel.
+</p>
+<h2>Distance to points of interest</h2>
+<p>
+This screen show the distance to a point of interest, saved in the file located on your SD-Card in /PGps/POI.txt.
+This is just the air line!
+</p>
+<p>
+A new POI can be saved by pressing the center button.
+</p>
+<h2>Lat/Lon</h2>
+This screen shows the current latitude and longitude.
+<h2>Distance</h2>
+<p>
+This screen shows the current driven distance. The distance will be updated when the new location is more away then the current accuracy.
+</p>
+<p>
+The current distance can be reseted with the center button. This has no effect to the current tip log, if enabled.
+</p>
+<h2>Current altitude</h2>
+This screen shows the current altitude.
+<h2>Trip logging</h2>
+<p>
+Trip logging can be enabled in the preferences. The default is enabled. A trip starts when the first GPS location has been captured and stopped when the radio is turned off.
+</p>
+<p>
+If you have a network connection the addressed of the starting point and ending point can be queried automatically. If you don't have network connection disable this feature to save your time.  
+</p>
+<p>
+In the menu there is a "Show trips" entry. This will list all logged trips. In this screen, there is a "Export trips" menu item where you can export you trips to your SD-Card in /PGps.
+</p>
+<p>
+The merge trips settings will merge trips, where the pause is less then the given value. Trips shorter than 1 km will be deleted automatically.
+</p>
+
+<h1>License</h1>
 <p>GNU GPL v3 
 <ul><li><a href="http://www.gnu.org/licenses/gpl.html">http://www.gnu.org/licenses/gpl.html</a> </li>
 </ul>
