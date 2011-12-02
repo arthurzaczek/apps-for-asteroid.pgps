@@ -94,8 +94,8 @@ public class Trips extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		menu.add(0, MENU_BACK, 0, "Back");
-		menu.add(1, MENU_EXPORT_TRIPS, 0, "Export trips");
+		menu.add(0, MENU_EXPORT_TRIPS, 0, "Export trips");
+		menu.add(1, MENU_BACK, 0, "Back");
 		return true;
 	}
 

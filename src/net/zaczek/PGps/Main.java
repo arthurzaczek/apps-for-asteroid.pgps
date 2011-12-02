@@ -2,7 +2,6 @@ package net.zaczek.PGps;
 
 import java.io.IOException;
 
-import net.zaczek.PGps.Data.DatabaseManager;
 import net.zaczek.PGps.Data.PGpsPreferences;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 public class Main extends Activity {
 	private static final String TAG = "PGps";
 	private static final int MENU_PREFERENCES = 1;
-	private static final int MENU_EXPORT_TRIPS = 2;
 	private static final int MENU_SHOW_TRIPS = 3;
 	private static final int MENU_ABOUT = 4;
 	private static final int MENU_EXIT = 5;
@@ -49,7 +47,6 @@ public class Main extends Activity {
 	private int currentPOI = -1;
 
 	private GpsService _service;
-	private DatabaseManager db;
 
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -69,8 +66,6 @@ public class Main extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
-		db = DatabaseManager.getInstance(getApplicationContext());
-
 		GpsService.start(getApplicationContext());
 		bindService(new Intent(this, GpsService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
@@ -277,11 +272,10 @@ public class Main extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "Creating options menu");
-		menu.add(0, MENU_PREFERENCES, 0, "Settings");
-		menu.add(1, MENU_EXPORT_TRIPS, 0, "Export trips");
-		menu.add(2, MENU_SHOW_TRIPS, 0, "Show trips");
-		menu.add(3, MENU_ABOUT, 0, "About");
-		menu.add(4, MENU_EXIT, 0, "Exit");
+		menu.add(0, MENU_SHOW_TRIPS, 0, "Show trips");
+		menu.add(1, MENU_PREFERENCES, 0, "Settings");
+		menu.add(2, MENU_ABOUT, 0, "About");
+		menu.add(3, MENU_EXIT, 0, "Exit");
 		return true;
 	}
 
@@ -292,9 +286,6 @@ public class Main extends Activity {
 		switch (itemId) {
 		case MENU_PREFERENCES:
 			startActivityForResult(new Intent(this, Preferences.class), 0);
-			return true;
-		case MENU_EXPORT_TRIPS:
-			new ExportTripsTask(this, _service, db).execute();
 			return true;
 		case MENU_SHOW_TRIPS:
 			startActivity(new Intent(this, Trips.class));
