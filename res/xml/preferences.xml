@@ -1,63 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference
-            android:key="enable_speed_warning"
-            android:title="Enable speed warning"
-            android:defaultValue="false" />
-    <PreferenceScreen
-            android:key="speed_warning"
-            android:title="Speed warnings"
-            android:dependency="enable_speed_warning">
+  	<PreferenceScreen
+            android:key="Log trips_screen"
+            android:title="Log the start, end and distance of the current trip">
+		<CheckBoxPreference
+        	    android:key="log_trips"
+            	android:title="Log trips"
+            	android:summary="Log the start, end and distance of the current trip"
+            	android:defaultValue="true" />
         <CheckBoxPreference
-                android:key="speed_30"
-                android:title="30 km/h" />
-        <CheckBoxPreference
-                android:key="speed_40"
-                android:title="40 km/h" />
-        <CheckBoxPreference
-                android:key="speed_50"
-                android:title="50 km/h" />
-        <CheckBoxPreference
-                android:key="speed_60"
-                android:title="60 km/h" />
-        <CheckBoxPreference
-                android:key="speed_70"
-                android:title="70 km/h" />
-        <CheckBoxPreference
-                android:key="speed_80"
-                android:title="80 km/h" />
-        <CheckBoxPreference
-                android:key="speed_90"
-                android:title="90 km/h" />
-        <CheckBoxPreference
-                android:key="speed_100"
-                android:title="100 km/h" />
-        <CheckBoxPreference
-                android:key="speed_110"
-                android:title="110 km/h" />
-        <CheckBoxPreference
-                android:key="speed_120"
-                android:title="120 km/h" />
-        <CheckBoxPreference
-                android:key="speed_130"
-                android:title="130 km/h" />
-        <CheckBoxPreference
-                android:key="speed_140"
-                android:title="140 km/h" />
-        <CheckBoxPreference
-                android:key="speed_150"
-                android:title="150 km/h" />
+        	    android:key="trips_geocode"
+            	android:title="Geocode positions"
+            	android:summary="Resolve lat/lon to addresses"
+            	android:defaultValue="true" />
+        <ListPreference
+            	android:key="merge_trips"
+            	android:title="Merge trips"
+            	android:summary="Merge trips within an interval"
+            	android:defaultValue="0"
+            	android:entries="@array/mergeTripsNames"
+            	android:entryValues="@array/mergeTripsValues" />  
     </PreferenceScreen>
-	<CheckBoxPreference
-            android:key="show_last_without_fix"
-            android:title="Show last values while no fix"
-            android:defaultValue="false" />
-	<CheckBoxPreference
-            android:key="log_trips"
-            android:title="Log trips"
-            android:summary="Log the start, end and distance of the current trip"
-            android:defaultValue="true" />
 	<ListPreference
             android:key="record_positions"
             android:title="Record position"
@@ -65,6 +29,10 @@
             android:defaultValue="0"
             android:entries="@array/recPosNames"
             android:entryValues="@array/recPosValues" />    
+	<CheckBoxPreference
+            android:key="show_last_without_fix"
+            android:title="Show last values while no fix"
+            android:defaultValue="false" />
 	<CheckBoxPreference
             android:key="use_comma_as_decimal_seperator"
             android:title="Decimal seperator"
