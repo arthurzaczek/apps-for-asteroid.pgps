@@ -70,7 +70,10 @@ public class DataManager {
 					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_ADR)) {
 						updateAddress(geocoder, db, c, log_trip_id, true);
 					}
-					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR) && c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR)
+							&& !c.isNull(DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT)
+							&& !c.isNull(DatabaseManager.COL_IDX_TRIPS_END_LOC_LON)
+							&& c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
 						updateAddress(geocoder, db, c, log_trip_id, false);
 					}
 				}
