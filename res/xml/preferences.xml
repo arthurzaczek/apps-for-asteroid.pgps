@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
   	<PreferenceScreen
             android:key="Log trips_screen"
-            android:title="Log the start, end and distance of the current trip">
+            android:title="Log trips">
 		<CheckBoxPreference
         	    android:key="log_trips"
             	android:title="Log trips"

@@ -71,39 +71,68 @@ public class DatabaseManager {
 		if (_single != null)
 			_single.db.close();
 	}
-	
-	private int update(String table, ContentValues values, String whereClause, String[] whereArgs) {
+
+	private int update(String table, ContentValues values, String whereClause,
+			String[] whereArgs) {
 		int result = db.update(table, values, whereClause, whereArgs);
-		Log.d(TAG, "Update " + table + "; WHERE: " + whereClause + "; result = " + result);
+		Log.d(TAG, "Update " + table + "; WHERE: " + whereClause
+				+ "; result = " + result);
 		return result;
 	}
-	
+
 	private int delete(String table, String whereClause, String[] whereArgs) {
 		int result = db.delete(table, whereClause, whereArgs);
-		Log.d(TAG, "Delete from " + table + "; WHERE: " + whereClause + "; result = " + result);
+		Log.d(TAG, "Delete from " + table + "; WHERE: " + whereClause
+				+ "; result = " + result);
 		return result;
 	}
 
-
-	
-	public long newTripEntry(Time start, Location loc) {
-		ContentValues vals = new ContentValues();
-		
-		// Stop all recording
-		vals.put(COL_TRIPS_IS_RECORDING, 0);
-		update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + "=1", null);
-
+	public long newTripEntry(Time start, Location loc, int merge_trips) {
 		deleteShortTrips();
 
-		vals = new ContentValues();
+		if (merge_trips > 0) {
+			Log.d(TAG, "Checking for trips to merge");
+			Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
+					null, null, null, null, COL_TRIPS_END + " DESC");
+			try {
+				if (cur.moveToFirst()) {
+					if (!cur.isNull(COL_IDX_TRIPS_END)) {
+						final long lastTime = cur.getLong(COL_IDX_TRIPS_END);
+						final long timeDiff = (start.toMillis(true) - lastTime) / 1000 / 60;
+						Log.d(TAG, "merge: timediff = " + timeDiff);
+						if (timeDiff < merge_trips) {
+							long rowId = cur.getLong(DatabaseHelper.COL_IDX_ID);
+							ContentValues vals = new ContentValues();
+							vals.put(COL_TRIPS_IS_RECORDING, 1);
+							update(TRIPS_TABLE_NAME, vals,
+									DatabaseHelper.COL_ID + " = " + rowId, null);
+							Log.i(TAG, "Merge trip, id = " + rowId);
+							return rowId;
+						}
+					}
+				}
+			} finally {
+				cur.close();
+			}
+		}
+
+		stopAllTrips();
+		ContentValues vals = new ContentValues();
 		vals.put(COL_TRIPS_START, start.toMillis(true));
 		vals.put(COL_TRIPS_START_LOC_LAT,
 				Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
 		vals.put(COL_TRIPS_START_LOC_LON,
 				Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
 		vals.put(COL_TRIPS_IS_RECORDING, 1);
-		long rowId = db.insertOrThrow(TRIPS_TABLE_NAME, null, vals);
+		final long rowId =  db.insertOrThrow(TRIPS_TABLE_NAME, null, vals);
+		Log.i(TAG, "Starting new trip, id = " + rowId);
 		return rowId;
+	}
+
+	private void stopAllTrips() {
+		ContentValues vals = new ContentValues();
+		vals.put(COL_TRIPS_IS_RECORDING, 0);
+		update(TRIPS_TABLE_NAME, vals, COL_TRIPS_IS_RECORDING + "=1", null);
 	}
 
 	public void updateTripEntry(long log_trip_id, Time end, Location loc,

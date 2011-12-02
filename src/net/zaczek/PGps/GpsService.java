@@ -212,8 +212,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 			lastDistanceLocation = location;
 
 		final float d = lastDistanceLocation.distanceTo(location);
-		if (location.hasAccuracy() && d > location.getAccuracy()) {
-		//if(true) { // just testing
+		//if (location.hasAccuracy() && d > location.getAccuracy()) {
+		if(true) { // just testing
 			_distance += d;
 			_tripDistance += d;
 			lastDistanceLocation = location;
@@ -341,7 +341,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		if (log_trip_id == -1) {
 			_tripDistance = 0;
-			log_trip_id = db.newTripEntry(now, location);
+			log_trip_id = db.newTripEntry(now, location, PGpsPreferences.getInstance(this).merge_trips);
 			_last_trip_update = now;
 		} else if (log_trip_id != -1 && timeDiff > 10000) {
 			db.updateTripEntry(log_trip_id, now, location, _tripDistance, false);
