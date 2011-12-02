@@ -88,8 +88,6 @@ public class DatabaseManager {
 	}
 
 	public long newTripEntry(Time start, Location loc, int merge_trips) {
-		deleteShortTrips();
-
 		if (merge_trips > 0) {
 			Log.d(TAG, "Checking for trips to merge");
 			Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
@@ -116,6 +114,7 @@ public class DatabaseManager {
 			}
 		}
 
+		deleteShortTrips();
 		stopAllTrips();
 		ContentValues vals = new ContentValues();
 		vals.put(COL_TRIPS_START, start.toMillis(true));
