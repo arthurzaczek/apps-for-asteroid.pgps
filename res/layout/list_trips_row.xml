@@ -26,6 +26,17 @@
     android:gravity="right"
     android:layout_alignParentRight="true"    
     android:layout_toRightOf="@+id/list_trips_start" ></TextView>
+  <TextView 
+    android:id="@+id/list_trips_recording"
+  	android:layout_height="wrap_content"
+    android:layout_width="wrap_content" 
+    android:text="*"
+    android:textStyle="bold"
+    android:textSize="26sp"
+    android:gravity="right"
+    android:layout_alignParentRight="true"    
+    android:layout_toRightOf="@+id/list_trips_start"
+    android:layout_below="@+id/list_trips_distance"></TextView>
     
   <TextView 
     android:id="@+id/list_trips_start_adr"

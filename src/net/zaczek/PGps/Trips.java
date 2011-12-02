@@ -51,8 +51,8 @@ public class Trips extends ListActivity {
 		cursor = db.getAllTrips();
 		startManagingCursor(cursor);
 		
-		String[] projection = new String[] { DatabaseManager.COL_TRIPS_START, DatabaseManager.COL_TRIPS_END, DatabaseManager.COL_TRIPS_DISTANCE, DatabaseManager.COL_TRIPS_START_ADR, DatabaseManager.COL_TRIPS_END_ADR };
-		int[] ids = new int[] { R.id.list_trips_start, R.id.list_trips_end, R.id.list_trips_distance, R.id.list_trips_start_adr, R.id.list_trips_end_adr };
+		String[] projection = new String[] { DatabaseManager.COL_TRIPS_START, DatabaseManager.COL_TRIPS_END, DatabaseManager.COL_TRIPS_DISTANCE, DatabaseManager.COL_TRIPS_START_ADR, DatabaseManager.COL_TRIPS_END_ADR, DatabaseManager.COL_TRIPS_IS_RECORDING };
+		int[] ids = new int[] { R.id.list_trips_start, R.id.list_trips_end, R.id.list_trips_distance, R.id.list_trips_start_adr, R.id.list_trips_end_adr, R.id.list_trips_recording };
 
 		CursorWrapper cw = new CursorWrapper(cursor) {
 			public String getString(int columnIndex) {
@@ -69,6 +69,8 @@ public class Trips extends ListActivity {
 					}
 				case DatabaseManager.COL_IDX_TRIPS_DISTANCE:
 					return String.format("%.2f", super.getFloat(columnIndex) / 1000.0f) + " km";
+				case DatabaseManager.COL_IDX_TRIPS_IS_RECORDING:
+					return super.getInt(columnIndex) == 1 ? "*" : "";
 				default:
 					return super.getString(columnIndex);
 				}

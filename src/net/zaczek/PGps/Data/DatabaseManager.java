@@ -184,7 +184,9 @@ public class DatabaseManager {
 
 	public void deleteShortTrips() {
 		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
-				+ COL_TRIPS_DISTANCE + " < 1", null);
+				+ COL_TRIPS_DISTANCE + "<1", null);
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
+				+ COL_TRIPS_DISTANCE + " IS NULL", null);
 	}
 
 	private Cursor getCursor(SQLiteDatabase db, String table,
