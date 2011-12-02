@@ -5,11 +5,11 @@ import java.util.TimerTask;
 
 import net.zaczek.PGps.Data.DataManager;
 import net.zaczek.PGps.Data.DatabaseManager;
+import net.zaczek.PGps.Data.PGpsPreferences;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -24,7 +24,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -57,7 +56,6 @@ public class GpsService extends Service implements LocationListener, Listener {
 	private int _maxSatellites = 0;
 	private int _satellitesInFix = 0;
 
-	private boolean log_trips = false;
 	private long log_trip_id = -1;
 	private Time _last_trip_update = new Time();
 
@@ -170,19 +168,15 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		// playNotification();
 
-		loadPreferences();
+		applyPreferences();
 
 		Log.i(TAG, "GpsService.onStart finished");
 		super.onStart(intent, startId);
 	}
 
-	public void loadPreferences() {
-		Log.i(TAG, "GpsService.loadPreferences");
-		SharedPreferences sharedPreferences = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		log_trips = sharedPreferences.getBoolean("log_trips", true);
-		if (log_trips) {
+	public void applyPreferences() {
+		Log.i(TAG, "GpsService.applyPreferences");
+		if (PGpsPreferences.getInstance(this).log_trips) {
 			if (_updateTripTimer == null) {
 				_updateTripTimer = new Timer();
 				_updateTripTimer.schedule(new UpdateTimeTask(), 10000, 60000);
@@ -339,7 +333,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 //	}
 
 	public void updateTrip() {
-		if (location == null || log_trips == false)
+		if (location == null || PGpsPreferences.getInstance(this).log_trips == false)
 			return;
 		Time now = new Time();
 		now.setToNow();
@@ -356,7 +350,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	}
 
 	public void stopTrip() {
-		if (log_trips && log_trip_id != -1) {
+		if (PGpsPreferences.getInstance(this).log_trips && log_trip_id != -1) {
 			Time now = new Time();
 			now.setToNow();
 			db.updateTripEntry(log_trip_id, now, location, _tripDistance, true);

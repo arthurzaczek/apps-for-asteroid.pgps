@@ -9,13 +9,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.Address;
 import com.parrot.parrotmaps.geocoding.Geocoder;
 import android.location.Location;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -57,6 +55,10 @@ public class DataManager {
 
 	public static synchronized void updateTripsGeoLocations(Context context, DatabaseManager db) {
 		Log.i(TAG, "updateTripsGeoLocations");
+		if(PGpsPreferences.getInstance(context).trips_geocode == false) {
+			Log.i(TAG, "updateTripsGeoLocations - disabled");
+			return;
+		}
 		Geocoder geocoder = new Geocoder(context);
 		try {
 			Cursor c = null;
@@ -103,13 +105,11 @@ public class DataManager {
 
 	public static void exportTrips(Context context, DatabaseManager db) throws IOException {
 		Log.i(TAG, "Exporting trips");
-		// http://code.google.com/p/android/issues/detail?id=2626
-		SharedPreferences prefs = PreferenceManager
-			.getDefaultSharedPreferences(context);
+		// http://code.google.com/p/android/issues/detail?id=2626		
 		char decimal = '.';
 		char decimalToReplace = ',';
 		
-		if(prefs.getBoolean("use_comma_as_decimal_seperator", true)) {
+		if(PGpsPreferences.getInstance(context).use_comma_as_decimal_seperator) {
 			decimal = ',';
 			decimalToReplace = '.';			
 		}

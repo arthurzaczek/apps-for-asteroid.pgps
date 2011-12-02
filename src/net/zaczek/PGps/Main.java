@@ -3,19 +3,18 @@ package net.zaczek.PGps;
 import java.io.IOException;
 
 import net.zaczek.PGps.Data.DatabaseManager;
+import net.zaczek.PGps.Data.PGpsPreferences;
 import net.zaczek.PGps.Data.POI;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -48,8 +47,6 @@ public class Main extends Activity {
 	private int currentMode = MODE_POI;
 
 	private int currentPOI = -1;
-
-	private boolean show_last_without_fix = false;
 
 	private GpsService _service;
 	private DatabaseManager db;
@@ -109,12 +106,7 @@ public class Main extends Activity {
 
 	@Override
 	protected void onResume() {
-		super.onResume();
-		SharedPreferences sharedPreferences = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		show_last_without_fix = sharedPreferences.getBoolean(
-				"show_last_without_fix", false);
+		super.onResume();		
 
 		if (_service != null)
 			_service.registerUpdateListener(hRefresh);
@@ -138,7 +130,7 @@ public class Main extends Activity {
 				+ _service.getMaxSatellites() + " Satellites");
 		boolean inFix = _service.getSatellitesInFix() > 0;
 
-		if (inFix || show_last_without_fix) {
+		if (inFix || PGpsPreferences.getInstance(this).show_last_without_fix) {
 			txtSpeed.setText(String.format("%.0f km/h",
 					_service.getSpeed() * 3.6));
 			txtAccuracy
@@ -321,7 +313,8 @@ public class Main extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		PGpsPreferences.getInstance(this).load(this);
 		if (_service != null)
-			_service.loadPreferences();
+			_service.applyPreferences();
 	}
 }
