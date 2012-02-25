@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.location.Location;
+import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -24,6 +25,14 @@ public class DatabaseManager {
 	public final static String COL_TRIPS_END_ADR = "endadr";
 	public final static String COL_TRIPS_DISTANCE = "distance";
 	public final static String COL_TRIPS_IS_RECORDING = "isrecording";
+	// V2
+	public final static String COL_TRIPS_LAST_END_LOC_LAT = "lastendloclat";
+	public final static String COL_TRIPS_LAST_END_LOC_LON = "lastendloclon";
+	public final static String COL_TRIPS_LAST_END_ADR = "lastendadr";
+	public final static String COL_TRIPS_DISTANCE_FROM_LAST = "distancefromlast";
+	public final static String COL_TRIPS_START_POI = "startpoi";
+	public final static String COL_TRIPS_END_POI = "endpoi";
+	public final static String COL_TRIPS_LAST_END_POI = "lastendpoi";
 
 	public final static int COL_IDX_TRIPS_START = 1;
 	public final static int COL_IDX_TRIPS_END = 2;
@@ -35,6 +44,14 @@ public class DatabaseManager {
 	public final static int COL_IDX_TRIPS_END_ADR = 8;
 	public final static int COL_IDX_TRIPS_DISTANCE = 9;
 	public final static int COL_IDX_TRIPS_IS_RECORDING = 10;
+	// V2
+	public final static int COL_IDX_TRIPS_LAST_END_LOC_LAT = 11;
+	public final static int COL_IDX_TRIPS_LAST_END_LOC_LON = 12;
+	public final static int COL_IDX_TRIPS_LAST_END_ADR = 13;
+	public final static int COL_IDX_TRIPS_DISTANCE_FROM_LAST = 14;
+	public final static int COL_IDX_TRIPS_START_POI = 15;
+	public final static int COL_IDX_TRIPS_END_POI = 16;
+	public final static int COL_IDX_TRIPS_LAST_END_POI = 17;
 
 	public static final String[] DEFAULT_PROJECTION = new String[] {
 			DatabaseHelper.COL_ID, // 0
@@ -48,6 +65,13 @@ public class DatabaseManager {
 			COL_TRIPS_END_ADR, // 8
 			COL_TRIPS_DISTANCE, // 9
 			COL_TRIPS_IS_RECORDING, // 10
+			COL_TRIPS_LAST_END_LOC_LAT, // 11
+			COL_TRIPS_LAST_END_LOC_LON, // 12
+			COL_TRIPS_LAST_END_ADR, // 13
+			COL_TRIPS_DISTANCE_FROM_LAST, // 14
+			COL_TRIPS_START_POI, // 15
+			COL_TRIPS_END_POI, // 16
+			COL_TRIPS_LAST_END_POI, // 17
 	};
 
 	private DatabaseHelper dbHelper;
@@ -88,42 +112,70 @@ public class DatabaseManager {
 	}
 
 	public long newTripEntry(Time start, Location loc, int merge_trips) {
+		stopAllTrips();
+		deleteShortTrips();
+
+		Log.d(TAG, "getting last trip.");
+		long last_end = 0;
+		String last_end_lat = null;
+		String last_end_lon = null;
+		String last_end_adr = null;
+		String last_end_poi = null;
+		Location last_end_loc = null;
+		final Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, null,
+				null, null, null, COL_TRIPS_END + " DESC");		
+		try {
+			if (cur.moveToFirst()) {
+				if (!cur.isNull(COL_IDX_TRIPS_END))
+					last_end = cur.getLong(COL_IDX_TRIPS_END);
+				last_end_lat = cur.getString(COL_IDX_TRIPS_END_LOC_LAT);
+				last_end_lon = cur.getString(COL_IDX_TRIPS_END_LOC_LON);
+				last_end_adr = cur.getString(COL_IDX_TRIPS_END_ADR);
+				last_end_poi = cur.getString(COL_IDX_TRIPS_END_POI);
+				if(!TextUtils.isEmpty(last_end_lat) && !TextUtils.isEmpty(last_end_lon)) {
+					final double lat = Location.convert(last_end_lat.replace(',', '.'));
+					final double lon = Location.convert(last_end_lon.replace(',', '.'));
+					last_end_loc = new Location("");
+					last_end_loc.setLatitude(lat);
+					last_end_loc.setLongitude(lon);
+				}
+			}
+		} finally {
+			cur.close();
+		}
+
 		if (merge_trips > 0) {
 			Log.d(TAG, "Checking for trips to merge");
-			Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
-					null, null, null, null, COL_TRIPS_END + " DESC");
-			try {
-				if (cur.moveToFirst()) {
-					if (!cur.isNull(COL_IDX_TRIPS_END)) {
-						final long lastTime = cur.getLong(COL_IDX_TRIPS_END);
-						final long timeDiff = (start.toMillis(true) - lastTime) / 1000 / 60;
-						Log.d(TAG, "merge: timediff = " + timeDiff);
-						if (timeDiff < merge_trips) {
-							long rowId = cur.getLong(DatabaseHelper.COL_IDX_ID);
-							ContentValues vals = new ContentValues();
-							vals.put(COL_TRIPS_IS_RECORDING, 1);
-							update(TRIPS_TABLE_NAME, vals,
-									DatabaseHelper.COL_ID + " = " + rowId, null);
-							Log.i(TAG, "Merge trip, id = " + rowId);
-							return rowId;
-						}
-					}
+			if (last_end > 0) {
+				final long timeDiff = (start.toMillis(true) - last_end) / 1000 / 60;
+				Log.d(TAG, "merge: timediff = " + timeDiff);
+				if (timeDiff < merge_trips) {
+					long rowId = cur.getLong(DatabaseHelper.COL_IDX_ID);
+					ContentValues vals = new ContentValues();
+					vals.put(COL_TRIPS_IS_RECORDING, 1);
+					update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID
+							+ " = " + rowId, null);
+					Log.i(TAG, "Merge trip, id = " + rowId);
+					return rowId;
 				}
-			} finally {
-				cur.close();
 			}
 		}
 
-		deleteShortTrips();
-		stopAllTrips();
 		ContentValues vals = new ContentValues();
 		vals.put(COL_TRIPS_START, start.toMillis(true));
 		vals.put(COL_TRIPS_START_LOC_LAT,
 				Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
 		vals.put(COL_TRIPS_START_LOC_LON,
 				Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
+		if(last_end > 0 && last_end_loc != null) {
+			vals.put(COL_TRIPS_LAST_END_LOC_LAT, last_end_lat);
+			vals.put(COL_TRIPS_LAST_END_LOC_LON, last_end_lon);
+			vals.put(COL_TRIPS_LAST_END_ADR, last_end_adr);
+			vals.put(COL_TRIPS_LAST_END_POI, last_end_poi);
+			vals.put(COL_TRIPS_DISTANCE_FROM_LAST, loc.distanceTo(last_end_loc));
+		}
 		vals.put(COL_TRIPS_IS_RECORDING, 1);
-		final long rowId =  db.insertOrThrow(TRIPS_TABLE_NAME, null, vals);
+		final long rowId = db.insertOrThrow(TRIPS_TABLE_NAME, null, vals);
 		Log.i(TAG, "Starting new trip, id = " + rowId);
 		return rowId;
 	}
@@ -150,12 +202,9 @@ public class DatabaseManager {
 	}
 
 	public void updateTripAddress(long log_trip_id, String address,
-			boolean updateStart) {
+			String adrCol) {
 		ContentValues vals = new ContentValues();
-		if (updateStart)
-			vals.put(COL_TRIPS_START_ADR, address);
-		else
-			vals.put(COL_TRIPS_END_ADR, address);
+			vals.put(adrCol, address);
 		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
@@ -174,7 +223,7 @@ public class DatabaseManager {
 	public Cursor getTripsToGeocode() {
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
 				COL_TRIPS_START_ADR + " is null OR " + COL_TRIPS_END_ADR
-						+ " is null", null, null, null, null);
+						+ " IS NULL", null, null, null, null);
 	}
 
 	public void deleteExportedTrips() {
@@ -182,10 +231,9 @@ public class DatabaseManager {
 	}
 
 	public void deleteShortTrips() {
-		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
-				+ COL_TRIPS_DISTANCE + "<1", null);
-		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0 AND "
-				+ COL_TRIPS_DISTANCE + " IS NULL", null);
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_DISTANCE + "<1", null);
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_DISTANCE + " IS NULL", null);
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_END + " IS NULL", null);
 	}
 
 	private Cursor getCursor(SQLiteDatabase db, String table,

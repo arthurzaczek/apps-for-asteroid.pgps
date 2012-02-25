@@ -9,7 +9,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 	private final static String		DATABASE_NAME				= "PGps.db";
-	private final static int		DATABASE_VERSION			= 1;
+	private final static int		DATABASE_VERSION			= 2;
 	
 	public final static String		COL_ID						= "_id";
 	public final static int			COL_IDX_ID					= 0;
@@ -39,11 +39,21 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			if(oldVersion == 1)
 			{
 				// Alter statements 
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_LAST_END_LOC_LAT  + " TEXT");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_LAST_END_LOC_LON  + " TEXT");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_LAST_END_ADR  + " TEXT");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_DISTANCE_FROM_LAST  + " REAL");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_START_POI  + " TEXT");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_END_POI  + " TEXT");
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_LAST_END_POI  + " TEXT");
+				
+				// Next version
 				oldVersion = 2;
 			}
 			if(oldVersion == 2)
 			{
 				// Alter statements 
+				// ...
 				oldVersion = 3;				
 			}
 		}

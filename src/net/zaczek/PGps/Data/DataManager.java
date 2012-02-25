@@ -68,13 +68,14 @@ public class DataManager {
 				while (c.moveToNext()) {
 					final long log_trip_id = c.getLong(DatabaseHelper.COL_IDX_ID);
 					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_ADR)) {
-						updateAddress(geocoder, db, c, log_trip_id, true);
+						updateAddress(geocoder, db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_START_LOC_LON, DatabaseManager.COL_TRIPS_START_ADR);
+					}
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_LAST_END_ADR)) {
+						updateAddress(geocoder, db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LON, DatabaseManager.COL_TRIPS_LAST_END_ADR);
 					}
 					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR)
-							&& !c.isNull(DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT)
-							&& !c.isNull(DatabaseManager.COL_IDX_TRIPS_END_LOC_LON)
 							&& c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
-						updateAddress(geocoder, db, c, log_trip_id, false);
+						updateAddress(geocoder, db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_END_LOC_LON, DatabaseManager.COL_TRIPS_END_ADR);
 					}
 				}
 			} finally {
@@ -89,9 +90,10 @@ public class DataManager {
 		}
 	}
 
-	private static void updateAddress(Geocoder geocoder, DatabaseManager db, Cursor c, long log_trip_id, boolean updateStart) throws IOException {
-		final double lat = Location.convert(c.getString(updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT : DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT).replace(',', '.'));
-		final double lng = Location.convert(c.getString(updateStart ? DatabaseManager.COL_IDX_TRIPS_START_LOC_LON : DatabaseManager.COL_IDX_TRIPS_END_LOC_LON).replace(',', '.'));
+	private static void updateAddress(Geocoder geocoder, DatabaseManager db, Cursor c, long log_trip_id, int idxLat, int idxLon, String adrCol) throws IOException {
+		if(c.isNull(idxLat) || c.isNull(idxLon)) return;
+		final double lat = Location.convert(c.getString(idxLat).replace(',', '.'));
+		final double lng = Location.convert(c.getString(idxLon).replace(',', '.'));
 		final List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
 		if (addresses != null && addresses.size() > 0) {
 			final StringBuilder sb = new StringBuilder();
@@ -102,7 +104,23 @@ public class DataManager {
 			if (sb.length() > 2)
 				sb.delete(sb.length() - 2, sb.length());
 			Log.i(TAG, "Update address: " + sb.toString());
-			db.updateTripAddress(log_trip_id, sb.toString(), updateStart);
+			db.updateTripAddress(log_trip_id, sb.toString(), adrCol);
+		}
+	}
+	
+	private static String getString(Cursor c, int idx, String nullValue) {
+		if(c.isNull(idx)) {
+			return nullValue;
+		} else {
+			return c.getString(idx);
+		}
+	}
+	
+	private static float getFloat(Cursor c, int idx, float nullValue) {
+		if(c.isNull(idx)) {
+			return nullValue;
+		} else {
+			return c.getFloat(idx);
 		}
 	}
 
@@ -127,7 +145,7 @@ public class DataManager {
 			c = db.getExportableTrips();
 			String name = "Trips-" + now.format("%Y%m%d-%H%M%S") + ".csv";
 			w = openWrite(name, false);
-			w.append("start date;start time;end date;end time;start location;end location;start address;end address;distance (km)\n");
+			w.append("start date;start time;end date;end time;start location;last location;end location;start address;last address;end address;start poi;last poi;end poi;distance (km);dist from last (km);total dist(km)\n");
 			while (c.moveToNext()) {
 				Time start = new Time();
 				start.set(c.getLong(DatabaseManager.COL_IDX_TRIPS_START));
@@ -139,24 +157,24 @@ public class DataManager {
 				w.append(end.format("%Y-%m-%d") + ";");
 				w.append(end.format("%H:%M:%S") + ";");
 
-				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT) + "," + c.getString(DatabaseManager.COL_IDX_TRIPS_START_LOC_LON) + ";");
-				w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT) + "," + c.getString(DatabaseManager.COL_IDX_TRIPS_END_LOC_LON) + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_START_LOC_LON, "-") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LON, "-") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_END_LOC_LON, "-") + ";");
 
-				if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_ADR)) {
-					w.append("-;");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_START_ADR, "-").replace("\"", "\"\"") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_ADR, "-").replace("\"", "\"\"") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_END_ADR, "-").replace("\"", "\"\"") + ";");		
+				
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_START_POI, "-").replace("\"", "\"\"") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_POI, "-").replace("\"", "\"\"") + ";");
+				w.append(getString(c, DatabaseManager.COL_IDX_TRIPS_END_POI, "-").replace("\"", "\"\"") + ";");		
 
-				} else {
-					w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_START_ADR).replace("\"", "\"\"") + ";");
-				}
-				if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_ADR)) {
-					w.append("-;");
-
-				} else {
-					w.append(c.getString(DatabaseManager.COL_IDX_TRIPS_END_ADR).replace("\"", "\"\"") + ";");
-				}
-
-				float dist = c.getFloat(DatabaseManager.COL_IDX_TRIPS_DISTANCE);
+				float dist = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE, 0);
+				float distFromLast = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE_FROM_LAST, 0);
+				float totalDist = dist + distFromLast;
 				w.append(String.format("%.2f", dist / 1000.0f).replace(decimalToReplace, decimal));
+				w.append(String.format("%.2f", distFromLast / 1000.0f).replace(decimalToReplace, decimal));
+				w.append(String.format("%.2f", totalDist / 1000.0f).replace(decimalToReplace, decimal));
 				w.append("\n");
 			}
 			w.flush();
