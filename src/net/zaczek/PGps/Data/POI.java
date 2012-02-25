@@ -25,6 +25,20 @@ public class POI {
 	public static POI get(int idx) {
 		return _pois.get(idx);
 	}
+	
+	public static POI get(Location loc) {
+		load();
+		float min = Float.MAX_VALUE;
+		POI result =null;
+		for(POI current : _pois) {
+			final float dist = current.location.distanceTo(loc);
+			if(dist < min) {
+				result = current;
+				min = dist;
+			}
+		}
+		return result;
+	}
 
 	public synchronized static void load() {
 		if (_pois != null)

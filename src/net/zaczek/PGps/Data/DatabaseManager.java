@@ -208,6 +208,14 @@ public class DatabaseManager {
 		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
+	
+	public void updateTripPOI(long log_trip_id, String name,
+			String poiCol) {
+		ContentValues vals = new ContentValues();
+			vals.put(poiCol, name);
+		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+				+ log_trip_id, null);
+	}
 
 	public Cursor getExportableTrips() {
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
@@ -222,10 +230,15 @@ public class DatabaseManager {
 
 	public Cursor getTripsToGeocode() {
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
-				COL_TRIPS_START_ADR + " is null OR " + COL_TRIPS_END_ADR
-						+ " IS NULL", null, null, null, null);
+				COL_TRIPS_START_ADR + " IS NULL OR " + 
+				COL_TRIPS_END_ADR + " IS NULL OR " + 
+				COL_TRIPS_LAST_END_ADR + " IS NULL OR " +
+				COL_TRIPS_START_POI + " IS NULL OR " + 
+				COL_TRIPS_END_POI + " IS NULL OR " + 
+				COL_TRIPS_LAST_END_POI + " IS NULL", 
+				null, null, null, null);
 	}
-
+	
 	public void deleteExportedTrips() {
 		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
 	}

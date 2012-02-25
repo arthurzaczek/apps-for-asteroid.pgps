@@ -77,6 +77,17 @@ public class DataManager {
 							&& c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
 						updateAddress(geocoder, db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_END_LOC_LON, DatabaseManager.COL_TRIPS_END_ADR);
 					}
+					
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_START_POI)) {
+						updatePOI(db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_START_LOC_LON, DatabaseManager.COL_TRIPS_START_POI);
+					}					
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_LAST_END_POI)) {
+						updatePOI(db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LON, DatabaseManager.COL_TRIPS_LAST_END_POI);
+					}
+					if (c.isNull(DatabaseManager.COL_IDX_TRIPS_END_POI)
+							&& c.getInt(DatabaseManager.COL_IDX_TRIPS_IS_RECORDING) == 0) {
+						updatePOI(db, c, log_trip_id, DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT, DatabaseManager.COL_IDX_TRIPS_END_LOC_LON, DatabaseManager.COL_TRIPS_END_POI);
+					}
 				}
 			} finally {
 				if (c != null)
@@ -87,6 +98,24 @@ public class DataManager {
 			Log.i(TAG, "updateTripsGeoLocations finished");
 		} catch (Exception ex) {
 			Log.e(TAG, "Unable to update geo locations", ex);
+		}
+	}
+
+	private static void updatePOI(DatabaseManager db, Cursor c,
+			long log_trip_id, int idxLat,
+			int idxLon, String poiCol) {
+		if(c.isNull(idxLat) || c.isNull(idxLon)) return;
+		final double lat = Location.convert(c.getString(idxLat).replace(',', '.'));
+		final double lng = Location.convert(c.getString(idxLon).replace(',', '.'));
+		final Location loc = new Location("");
+		loc.setLatitude(lat);
+		loc.setLongitude(lng);
+		POI p = POI.get(loc);		
+		if(p != null) {
+			final float dist = p.getLocation().distanceTo(loc);
+			if(dist < 1000.0f) {
+				db.updateTripPOI(log_trip_id, p.getName(), poiCol);
+			}
 		}
 	}
 
@@ -172,8 +201,8 @@ public class DataManager {
 				float dist = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE, 0);
 				float distFromLast = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE_FROM_LAST, 0);
 				float totalDist = dist + distFromLast;
-				w.append(String.format("%.2f", dist / 1000.0f).replace(decimalToReplace, decimal));
-				w.append(String.format("%.2f", distFromLast / 1000.0f).replace(decimalToReplace, decimal));
+				w.append(String.format("%.2f", dist / 1000.0f).replace(decimalToReplace, decimal) + ";");
+				w.append(String.format("%.2f", distFromLast / 1000.0f).replace(decimalToReplace, decimal) + ";");
 				w.append(String.format("%.2f", totalDist / 1000.0f).replace(decimalToReplace, decimal));
 				w.append("\n");
 			}
