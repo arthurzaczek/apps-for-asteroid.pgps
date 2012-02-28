@@ -14,7 +14,7 @@ public class WakeUp extends BroadcastReceiver {
 		final String action = intent.getAction();
 		Log.i(TAG, "receiving broadcast intent: " + action);
 		if ("com.parrot.asteroid.WakeUp".equals(action)) {
-			Log.e(TAG, "Received WakeUp " + intent.toString());
+			Log.i(TAG, "Received WakeUp " + intent.toString());
 			GpsService.start(context);
 		} else {
 			Log.e(TAG, "Received unexpected intent " + intent.toString());

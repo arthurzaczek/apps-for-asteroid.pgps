@@ -14,7 +14,7 @@ public class StandBy extends BroadcastReceiver {
 		final String action = intent.getAction();
 		Log.i(TAG, "receiving broadcast intent: " + action);
 		if ("com.parrot.asteroid.StandBy".equals(action)) {
-			Log.e(TAG, "Received StandBy " + intent.toString());
+			Log.i(TAG, "Received StandBy " + intent.toString());
 			GpsService.stop(context);
 		} else {
 			Log.e(TAG, "Received unexpected intent " + intent.toString());

@@ -14,7 +14,7 @@ public class BootCompleted extends BroadcastReceiver {
 		final String action = intent.getAction();
 		Log.i(TAG, "receiving broadcast intent: " + action);
 		if ("android.intent.action.BOOT_COMPLETED".equals(action)) {
-			Log.e(TAG, "Received BOOT_COMPLETED " + intent.toString());
+			Log.i(TAG, "Received BOOT_COMPLETED " + intent.toString());
 			GpsService.start(context);
 		} else {
 			Log.e(TAG, "Received unexpected intent " + intent.toString());
