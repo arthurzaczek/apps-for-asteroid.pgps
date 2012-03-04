@@ -80,6 +80,8 @@ public class DatabaseManager {
 	private DatabaseManager(Context ctx) {
 		dbHelper = new DatabaseHelper(ctx);
 		db = dbHelper.getWritableDatabase();
+		final int ver = db.getVersion();
+		Log.i(TAG, "Current DB Version = " + ver);
 	}
 
 	private static DatabaseManager _single;
