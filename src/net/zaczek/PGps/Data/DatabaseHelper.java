@@ -65,6 +65,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 
 	private void createDb(SQLiteDatabase db)
 	{
+		Log.i("PGps", "creating Database");		
 		final String columns = TextUtils.join(", ", new String[] {
 				COL_ID + " INTEGER PRIMARY KEY",
 				DatabaseManager.COL_TRIPS_START + " INTEGER", 
@@ -76,7 +77,16 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				DatabaseManager.COL_TRIPS_START_ADR + " TEXT",
 				DatabaseManager.COL_TRIPS_END_ADR + " TEXT",
 				DatabaseManager.COL_TRIPS_DISTANCE + " REAL",
-				DatabaseManager.COL_TRIPS_IS_RECORDING + " INTEGER"});
+				DatabaseManager.COL_TRIPS_IS_RECORDING + " INTEGER",
+
+				DatabaseManager.COL_TRIPS_LAST_END_LOC_LAT + " TEXT",
+				DatabaseManager.COL_TRIPS_LAST_END_LOC_LON + " TEXT",
+				DatabaseManager.COL_TRIPS_LAST_END_ADR + " TEXT",
+				DatabaseManager.COL_TRIPS_DISTANCE_FROM_LAST + " REAL",
+				DatabaseManager.COL_TRIPS_START_POI + " TEXT",
+				DatabaseManager.COL_TRIPS_END_POI + " TEXT",
+				DatabaseManager.COL_TRIPS_LAST_END_POI + " TEXT"
+		});
 
 		db.execSQL("CREATE TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " (" + columns
 				+ ");");
