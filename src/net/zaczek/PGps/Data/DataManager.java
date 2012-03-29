@@ -225,9 +225,7 @@ public class DataManager {
 			// Write header
 			gpxwriter.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>\n<?xml-stylesheet href=\"gpx.xsl\" type=\"text/xsl\"?>\n");
 			// Root Tag
-			gpxwriter.write("<gpx version=\"1.0\"\n"
-					+ "creator=\"RaceTracking\"\n"
-					+ "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.topografix.com/GPX/1/0\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd\">\n");
+			gpxwriter.write("<gpx version=\"1.1\" creator=\"PGPs\">\n");
 			// Track & track segment tags
 			gpxwriter.write("<trk>\n<trkseg>\n");
 		} catch (IOException e) {
