@@ -352,7 +352,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			_record_positions_gpxwriter = DataManager.beginGPSLog();
 		}
 
-		if (timeDiff > (record_positions * 10000)) {
+		if (timeDiff > (record_positions * 1000)) {
 			DataManager.writeGPSLog(_record_positions_gpxwriter, _lat, _lon, _time, _speed, _accuracy);
 			_last_record_positions_update = now;
 		}
