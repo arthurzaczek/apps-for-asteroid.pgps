@@ -214,4 +214,63 @@ public class DataManager {
 				w.close();
 		}
 	}
+
+	public static OutputStreamWriter beginGPSLog() {
+		OutputStreamWriter gpxwriter = null;
+		try {
+			Time t = new Time();
+			t.setToNow();
+			String fileName = t.format2445() + ".gpx";
+			gpxwriter = openWrite(fileName, false);
+			// Write header
+			gpxwriter.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>\n<?xml-stylesheet href=\"gpx.xsl\" type=\"text/xsl\"?>\n");
+			// Root Tag
+			gpxwriter.write("<gpx version=\"1.0\"\n"
+					+ "creator=\"RaceTracking\"\n"
+					+ "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://www.topografix.com/GPX/1/0\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd\">\n");
+			// Track & track segment tags
+			gpxwriter.write("<trk>\n<trkseg>\n");
+		} catch (IOException e) {
+			if(gpxwriter != null) {
+				try {
+					gpxwriter.flush();
+					gpxwriter.close();
+				} catch (IOException e1) {
+					// Don't care
+					e1.printStackTrace();
+				}
+				gpxwriter = null;
+			}
+			Log.e(TAG, "Could not write file " + e.getMessage());
+		}
+		return gpxwriter; 
+	}
+	
+	public static void writeGPSLog(OutputStreamWriter gpxwriter, String lat, String lon, Time time, float speed, float accuracy) {
+		// write to file
+		if (gpxwriter != null) {
+			try {
+				gpxwriter.write("<trkpt lat=\"" + lat + "\" lon=\"" + lon + "\">\n");
+				gpxwriter.write("<time>" + time.format3339(false) + "</time>\n");
+				gpxwriter.write(String.format("<cmt>Accuracy: %.0f m; Speed: %.2f</cmt>\n", accuracy, speed));
+				gpxwriter.write("</trkpt>\n");
+				gpxwriter.flush();
+			} catch (IOException e) {
+				Log.e("RaceTracing", "Could write to file " + e.getMessage());
+			}
+		}
+	}
+
+	public static void endGPSLog(OutputStreamWriter gpxwriter) {
+		if (gpxwriter != null) {
+			try {
+				gpxwriter.write("</trkseg>\n</trk>\n</gpx>");
+				gpxwriter.flush();
+				gpxwriter.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Could close file " + e.getMessage());
+			}
+		}
+	}
+
 }

@@ -1,5 +1,6 @@
 package net.zaczek.PGps;
 
+import java.io.OutputStreamWriter;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -58,6 +59,9 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	private long log_trip_id = -1;
 	private Time _last_trip_update = new Time();
+	
+	private Time _last_record_positions_update = new Time();
+	private OutputStreamWriter _record_positions_gpxwriter = null;
 
 	class UpdateTimeTask extends TimerTask {
 		public void run() {
@@ -221,6 +225,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		updateTrip();
 		updateGps();
+		updateGpsLog();
 	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -236,6 +241,9 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onDestroy() {
 		Log.i(TAG, "GpsService.onDestroy");
 		stopTrip();
+		
+		DataManager.endGPSLog(_record_positions_gpxwriter);
+		_record_positions_gpxwriter = null;
 
 		if(_updateTripTimer != null) {
 			_updateTripTimer.cancel();
@@ -267,7 +275,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	};
 
 	private final IBinder mBinder = new LocalBinder();
-
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -331,6 +339,24 @@ public class GpsService extends Service implements LocationListener, Listener {
 //			e.printStackTrace();
 //		}
 //	}
+	
+	public void updateGpsLog() {
+		int record_positions = PGpsPreferences.getInstance(this).record_positions;
+		if (location == null || record_positions == 0)
+			return;
+		Time now = new Time();
+		now.setToNow();
+		long timeDiff = now.toMillis(true) - _last_record_positions_update.toMillis(true);
+		
+		if(_record_positions_gpxwriter == null) {
+			_record_positions_gpxwriter = DataManager.beginGPSLog();
+		}
+
+		if (timeDiff > (record_positions * 10000)) {
+			DataManager.writeGPSLog(_record_positions_gpxwriter, _lat, _lon, _time, _speed, _accuracy);
+			_last_record_positions_update = now;
+		}
+	}
 
 	public void updateTrip() {
 		if (location == null || PGpsPreferences.getInstance(this).log_trips == false)

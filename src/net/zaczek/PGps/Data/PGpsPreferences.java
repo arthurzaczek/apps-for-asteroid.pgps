@@ -13,6 +13,7 @@ public class PGpsPreferences {
 	public boolean show_last_without_fix;
 	public boolean trips_geocode;
 	public int merge_trips;
+	public int record_positions;
 	
 	private PGpsPreferences()
 	{
@@ -34,10 +35,15 @@ public class PGpsPreferences {
 		log_trips = prefs.getBoolean("log_trips", true);
 		trips_geocode = prefs.getBoolean("trips_geocode", true);
 		try {
-		merge_trips = Integer.valueOf(prefs.getString("merge_trips", "0"));
+			merge_trips = Integer.valueOf(prefs.getString("merge_trips", "0"));
 		} catch(Exception e) {
 			Log.e(TAG, "Unable to load merge_trips pref", e);
 		}
+		try {
+			record_positions = Integer.valueOf(prefs.getString("record_positions", "0"));
+		} catch(Exception e) {
+			Log.e(TAG, "Unable to load record_positions pref", e);
+		}		
 		show_last_without_fix = prefs.getBoolean("show_last_without_fix", false);
 		use_comma_as_decimal_seperator = prefs.getBoolean("use_comma_as_decimal_seperator", true);
 		

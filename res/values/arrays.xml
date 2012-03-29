@@ -1,42 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string-array name="recPosNames">
-		<item>None</item>
-		<item>1 sec</item>
-		<item>2 sec</item>
-		<item>5 sec</item>
-		<item>10 sec</item>
-		<item>30 sec</item>
-	</string-array>
 
-	<string-array name="recPosValues">
-		<item>0</item>
-		<item>1</item>
-		<item>2</item>
-		<item>5</item>
-		<item>10</item>
-		<item>30</item>
-	</string-array>
-	
-	<string-array name="mergeTripsNames">
-		<item>Not</item>
-		<item>1 min</item>
-		<item>5 min</item>
-		<item>10 min</item>
-		<item>15 min</item>
-		<item>30 min</item>
-		<item>1 hour</item>
-		<item>2 hours</item>
-	</string-array>
+    <string-array name="recPosNames">
+        <item>None</item>
+        <item>1 sec</item>
+        <item>2 sec</item>
+        <item>5 sec</item>
+        <item>10 sec</item>
+        <item>30 sec</item>
+        <item>1 min</item>
+        <item>5 min</item>
+        <item>10 min</item>
+        <item>30 min</item>
+        <item>1 hour</item>
+        <item>2 hour</item>
+        <item>6 hour</item>
+    </string-array>
+    <string-array name="recPosValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>5</item>
+        <item>10</item>
+        <item>30</item>
+        <item>300</item>
+        <item>600</item>
+        <item>1800</item>
+        <item>3600</item>
+        <item>7200</item>
+        <item>21600</item>
+    </string-array>
+    <string-array name="mergeTripsNames">
+        <item>Not</item>
+        <item>1 min</item>
+        <item>5 min</item>
+        <item>10 min</item>
+        <item>15 min</item>
+        <item>30 min</item>
+        <item>1 hour</item>
+        <item>2 hours</item>
+    </string-array>
+    <string-array name="mergeTripsValues">
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+    </string-array>
 
-	<string-array name="mergeTripsValues">
-		<item>0</item>
-		<item>1</item>
-		<item>5</item>
-		<item>10</item>
-		<item>15</item>
-		<item>30</item>
-		<item>60</item>
-		<item>120</item>
-	</string-array>
 </resources>
