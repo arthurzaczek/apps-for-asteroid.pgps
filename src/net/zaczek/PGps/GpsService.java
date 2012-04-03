@@ -59,7 +59,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	private long log_trip_id = -1;
 	private Time _last_trip_update = new Time();
-	
+
 	private Time _last_record_positions_update = new Time();
 	private OutputStreamWriter _record_positions_gpxwriter = null;
 
@@ -185,7 +185,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 				_updateTripTimer = new Timer();
 				_updateTripTimer.schedule(new UpdateTimeTask(), 10000, 60000);
 			}
-		} else if(_updateTripTimer != null) {
+		} else if (_updateTripTimer != null) {
 			_updateTripTimer.cancel();
 			_updateTripTimer = null;
 		}
@@ -204,8 +204,10 @@ public class GpsService extends Service implements LocationListener, Listener {
 	}
 
 	public void onGpsStatusChanged(int event) {
-		status = locationManager.getGpsStatus(status);
-		updateGps();
+		if (locationManager != null) {
+			status = locationManager.getGpsStatus(status);
+			updateGps();
+		}
 	}
 
 	public void onLocationChanged(Location l) {
@@ -241,15 +243,15 @@ public class GpsService extends Service implements LocationListener, Listener {
 	public void onDestroy() {
 		Log.i(TAG, "GpsService.onDestroy");
 		stopTrip();
-		
+
 		DataManager.endGPSLog(_record_positions_gpxwriter);
 		_record_positions_gpxwriter = null;
 
-		if(_updateTripTimer != null) {
+		if (_updateTripTimer != null) {
 			_updateTripTimer.cancel();
 			_updateTripTimer = null;
 		}
-		
+
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
 			locationManager = null;
@@ -263,7 +265,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 			mp.reset();
 			mp.release();
 		}
-				
+
 		Log.i(TAG, "GpsService.onDestroy finished");
 		super.onDestroy();
 	}
@@ -275,7 +277,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 	};
 
 	private final IBinder mBinder = new LocalBinder();
-	
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -326,40 +328,43 @@ public class GpsService extends Service implements LocationListener, Listener {
 		}
 	}
 
-//	private void playNotification() {
-//		try {
-//			mp.reset();
-//			Uri alert = RingtoneManager
-//					.getDefaultUri(RingtoneManager.TYPE_ALARM);
-//			if (alert != null) {
-//				mp.setDataSource(this, alert);
-//				mp.prepareAsync();
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
+	// private void playNotification() {
+	// try {
+	// mp.reset();
+	// Uri alert = RingtoneManager
+	// .getDefaultUri(RingtoneManager.TYPE_ALARM);
+	// if (alert != null) {
+	// mp.setDataSource(this, alert);
+	// mp.prepareAsync();
+	// }
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	// }
+
 	public void updateGpsLog() {
 		int record_positions = PGpsPreferences.getInstance(this).record_positions;
 		if (location == null || record_positions == 0)
 			return;
 		Time now = new Time();
 		now.setToNow();
-		long timeDiff = now.toMillis(true) - _last_record_positions_update.toMillis(true);
-		
-		if(_record_positions_gpxwriter == null) {
+		long timeDiff = now.toMillis(true)
+				- _last_record_positions_update.toMillis(true);
+
+		if (_record_positions_gpxwriter == null) {
 			_record_positions_gpxwriter = DataManager.beginGPSLog();
 		}
 
 		if (timeDiff > (record_positions * 1000)) {
-			DataManager.writeGPSLog(_record_positions_gpxwriter, _lat, _lon, _time, _speed, _accuracy);
+			DataManager.writeGPSLog(_record_positions_gpxwriter, _lat, _lon,
+					_time, _speed, _accuracy);
 			_last_record_positions_update = now;
 		}
 	}
 
 	public void updateTrip() {
-		if (location == null || PGpsPreferences.getInstance(this).log_trips == false)
+		if (location == null
+				|| PGpsPreferences.getInstance(this).log_trips == false)
 			return;
 		Time now = new Time();
 		now.setToNow();
@@ -367,7 +372,8 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 		if (log_trip_id == -1) {
 			_tripDistance = 0;
-			log_trip_id = db.newTripEntry(now, location, PGpsPreferences.getInstance(this).merge_trips);
+			log_trip_id = db.newTripEntry(now, location,
+					PGpsPreferences.getInstance(this).merge_trips);
 			_last_trip_update = now;
 		} else if (log_trip_id != -1 && timeDiff > 10000) {
 			db.updateTripEntry(log_trip_id, now, location, _tripDistance, false);
