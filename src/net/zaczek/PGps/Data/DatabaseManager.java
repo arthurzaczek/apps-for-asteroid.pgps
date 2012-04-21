@@ -119,6 +119,7 @@ public class DatabaseManager {
 
 		Log.d(TAG, "getting last trip.");
 		long last_end = 0;
+		long last_id = 0;
 		String last_end_lat = null;
 		String last_end_lon = null;
 		String last_end_adr = null;
@@ -128,6 +129,7 @@ public class DatabaseManager {
 				null, null, null, COL_TRIPS_END + " DESC");		
 		try {
 			if (cur.moveToFirst()) {
+				last_id = cur.getLong(DatabaseHelper.COL_IDX_ID);
 				if (!cur.isNull(COL_IDX_TRIPS_END))
 					last_end = cur.getLong(COL_IDX_TRIPS_END);
 				last_end_lat = cur.getString(COL_IDX_TRIPS_END_LOC_LAT);
@@ -152,13 +154,12 @@ public class DatabaseManager {
 				final long timeDiff = (start.toMillis(true) - last_end) / 1000 / 60;
 				Log.d(TAG, "merge: timediff = " + timeDiff);
 				if (timeDiff < merge_trips) {
-					long rowId = cur.getLong(DatabaseHelper.COL_IDX_ID);
 					ContentValues vals = new ContentValues();
 					vals.put(COL_TRIPS_IS_RECORDING, 1);
 					update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID
-							+ " = " + rowId, null);
-					Log.i(TAG, "Merge trip, id = " + rowId);
-					return rowId;
+							+ " = " + last_id, null);
+					Log.i(TAG, "Merge trip, id = " + last_id);
+					return last_id;
 				}
 			}
 		}
