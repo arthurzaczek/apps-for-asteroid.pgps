@@ -220,14 +220,17 @@ public class DataManager {
 		try {
 			Time t = new Time();
 			t.setToNow();
-			String fileName = t.format2445() + ".gpx";
+			String name = t.format2445();
+			String fileName = name + ".gpx";
 			gpxwriter = openWrite(fileName, false);
 			// Write header
-			gpxwriter.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>\n<?xml-stylesheet href=\"gpx.xsl\" type=\"text/xsl\"?>\n");
+			gpxwriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 			// Root Tag
-			gpxwriter.write("<gpx version=\"1.1\" creator=\"PGPs\">\n");
+			gpxwriter.write("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"PGPs\">\n");
 			// Track & track segment tags
-			gpxwriter.write("<trk>\n<trkseg>\n");
+			gpxwriter.write("  <trk>\n");
+			gpxwriter.write("  <name>" + name + "</name>\n");
+			gpxwriter.write("    <trkseg>\n");
 		} catch (IOException e) {
 			if(gpxwriter != null) {
 				try {
@@ -248,10 +251,10 @@ public class DataManager {
 		// write to file
 		if (gpxwriter != null) {
 			try {
-				gpxwriter.write("<trkpt lat=\"" + lat + "\" lon=\"" + lon + "\">\n");
-				gpxwriter.write("<time>" + time.format3339(false) + "</time>\n");
-				gpxwriter.write(String.format("<cmt>Accuracy: %.0f m; Speed: %.2f</cmt>\n", accuracy, speed));
-				gpxwriter.write("</trkpt>\n");
+				gpxwriter.write("      <trkpt lat=\"" + lat + "\" lon=\"" + lon + "\">\n");
+				gpxwriter.write("        <time>" + time.format3339(false) + "</time>\n");
+				gpxwriter.write(String.format("        <cmt>Accuracy: %.0f m; Speed: %.2f</cmt>\n", accuracy, speed));
+				gpxwriter.write("      </trkpt>\n");
 				gpxwriter.flush();
 			} catch (IOException e) {
 				Log.e("RaceTracing", "Could write to file " + e.getMessage());
@@ -262,7 +265,9 @@ public class DataManager {
 	public static void endGPSLog(OutputStreamWriter gpxwriter) {
 		if (gpxwriter != null) {
 			try {
-				gpxwriter.write("</trkseg>\n</trk>\n</gpx>");
+				gpxwriter.write("    </trkseg>\n");
+				gpxwriter.write("  </trk>\n");
+				gpxwriter.write("</gpx>");
 				gpxwriter.flush();
 				gpxwriter.close();
 			} catch (IOException e) {
