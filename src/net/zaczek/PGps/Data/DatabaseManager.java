@@ -33,6 +33,9 @@ public class DatabaseManager {
 	public final static String COL_TRIPS_START_POI = "startpoi";
 	public final static String COL_TRIPS_END_POI = "endpoi";
 	public final static String COL_TRIPS_LAST_END_POI = "lastendpoi";
+	// V3
+	public static final String COL_TRIPS_POSTED = "posted";
+
 
 	public final static int COL_IDX_TRIPS_START = 1;
 	public final static int COL_IDX_TRIPS_END = 2;
@@ -52,6 +55,8 @@ public class DatabaseManager {
 	public final static int COL_IDX_TRIPS_START_POI = 15;
 	public final static int COL_IDX_TRIPS_END_POI = 16;
 	public final static int COL_IDX_TRIPS_LAST_END_POI = 17;
+	// V3
+	public final static int COL_IDX_TRIPS_POSTED = 18;
 
 	public static final String[] DEFAULT_PROJECTION = new String[] {
 			DatabaseHelper.COL_ID, // 0
@@ -72,6 +77,7 @@ public class DatabaseManager {
 			COL_TRIPS_START_POI, // 15
 			COL_TRIPS_END_POI, // 16
 			COL_TRIPS_LAST_END_POI, // 17
+			COL_TRIPS_POSTED, // 18
 	};
 
 	private DatabaseHelper dbHelper;
@@ -125,8 +131,8 @@ public class DatabaseManager {
 		String last_end_adr = null;
 		String last_end_poi = null;
 		Location last_end_loc = null;
-		final Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, null,
-				null, null, null, COL_TRIPS_END + " DESC");		
+		final Cursor cur = getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
+				null, null, null, null, COL_TRIPS_END + " DESC");
 		try {
 			if (cur.moveToFirst()) {
 				last_id = cur.getLong(DatabaseHelper.COL_IDX_ID);
@@ -136,9 +142,12 @@ public class DatabaseManager {
 				last_end_lon = cur.getString(COL_IDX_TRIPS_END_LOC_LON);
 				last_end_adr = cur.getString(COL_IDX_TRIPS_END_ADR);
 				last_end_poi = cur.getString(COL_IDX_TRIPS_END_POI);
-				if(!TextUtils.isEmpty(last_end_lat) && !TextUtils.isEmpty(last_end_lon)) {
-					final double lat = Location.convert(last_end_lat.replace(',', '.'));
-					final double lon = Location.convert(last_end_lon.replace(',', '.'));
+				if (!TextUtils.isEmpty(last_end_lat)
+						&& !TextUtils.isEmpty(last_end_lon)) {
+					final double lat = Location.convert(last_end_lat.replace(
+							',', '.'));
+					final double lon = Location.convert(last_end_lon.replace(
+							',', '.'));
 					last_end_loc = new Location("");
 					last_end_loc.setLatitude(lat);
 					last_end_loc.setLongitude(lon);
@@ -170,7 +179,7 @@ public class DatabaseManager {
 				Location.convert(loc.getLatitude(), Location.FORMAT_DEGREES));
 		vals.put(COL_TRIPS_START_LOC_LON,
 				Location.convert(loc.getLongitude(), Location.FORMAT_DEGREES));
-		if(last_end > 0 && last_end_loc != null) {
+		if (last_end > 0 && last_end_loc != null) {
 			vals.put(COL_TRIPS_LAST_END_LOC_LAT, last_end_lat);
 			vals.put(COL_TRIPS_LAST_END_LOC_LON, last_end_lon);
 			vals.put(COL_TRIPS_LAST_END_ADR, last_end_adr);
@@ -207,15 +216,21 @@ public class DatabaseManager {
 	public void updateTripAddress(long log_trip_id, String address,
 			String adrCol) {
 		ContentValues vals = new ContentValues();
-			vals.put(adrCol, address);
+		vals.put(adrCol, address);
+		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
+				+ log_trip_id, null);
+	}
+
+	public void updateTripPOI(long log_trip_id, String name, String poiCol) {
+		ContentValues vals = new ContentValues();
+		vals.put(poiCol, name);
 		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
 	
-	public void updateTripPOI(long log_trip_id, String name,
-			String poiCol) {
+	public void updateTripPosted(long log_trip_id) {
 		ContentValues vals = new ContentValues();
-			vals.put(poiCol, name);
+		vals.put(COL_TRIPS_POSTED, 1);
 		update(TRIPS_TABLE_NAME, vals, DatabaseHelper.COL_ID + " = "
 				+ log_trip_id, null);
 	}
@@ -226,6 +241,12 @@ public class DatabaseManager {
 				COL_TRIPS_START + " ASC");
 	}
 
+	public Cursor getPostableTrips() {
+		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
+				COL_TRIPS_IS_RECORDING + "=0 AND " + COL_TRIPS_POSTED + " IS NULL",
+				null, null, null, COL_TRIPS_START + " ASC");
+	}
+
 	public Cursor getAllTrips() {
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION, null, null,
 				null, null, COL_TRIPS_START + " DESC");
@@ -233,17 +254,20 @@ public class DatabaseManager {
 
 	public Cursor getTripsToGeocode() {
 		return getCursor(db, TRIPS_TABLE_NAME, DEFAULT_PROJECTION,
-				COL_TRIPS_START_ADR + " IS NULL OR " + 
-				COL_TRIPS_END_ADR + " IS NULL OR " + 
-				COL_TRIPS_LAST_END_ADR + " IS NULL OR " +
-				COL_TRIPS_START_POI + " IS NULL OR " + 
-				COL_TRIPS_END_POI + " IS NULL OR " + 
-				COL_TRIPS_LAST_END_POI + " IS NULL", 
-				null, null, null, null);
+				COL_TRIPS_START_ADR + " IS NULL OR " + COL_TRIPS_END_ADR
+						+ " IS NULL OR " + COL_TRIPS_LAST_END_ADR
+						+ " IS NULL OR " + COL_TRIPS_START_POI + " IS NULL OR "
+						+ COL_TRIPS_END_POI + " IS NULL OR "
+						+ COL_TRIPS_LAST_END_POI + " IS NULL", null, null,
+				null, null);
 	}
-	
+
 	public void deleteExportedTrips() {
 		delete(TRIPS_TABLE_NAME, COL_TRIPS_IS_RECORDING + "=0", null);
+	}
+	
+	public void deletePostedTrips() {
+		delete(TRIPS_TABLE_NAME, COL_TRIPS_POSTED + "=1", null);
 	}
 
 	public void deleteShortTrips() {
@@ -260,4 +284,5 @@ public class DatabaseManager {
 		return qb.query(db, projectionIn, selection, selectionArgs, groupBy,
 				having, sortOrder);
 	}
+
 }

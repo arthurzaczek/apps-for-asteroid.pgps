@@ -1,5 +1,6 @@
 package net.zaczek.PGps;
 
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -66,6 +67,12 @@ public class GpsService extends Service implements LocationListener, Listener {
 	class UpdateTimeTask extends TimerTask {
 		public void run() {
 			DataManager.updateTripsGeoLocations(getApplicationContext(), db);
+			try {
+				DataManager.postTrips(getApplicationContext(), db);
+			} catch (IOException e) {
+				Log.e(TAG, "Unable to post trips to google", e);
+				e.printStackTrace();
+			}
 		}
 	}
 

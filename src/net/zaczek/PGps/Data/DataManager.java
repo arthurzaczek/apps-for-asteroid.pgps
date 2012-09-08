@@ -7,13 +7,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.location.Address;
 import com.parrot.parrotmaps.geocoding.Geocoder;
 import android.location.Location;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -213,6 +222,80 @@ public class DataManager {
 			if (w != null)
 				w.close();
 		}
+	}
+	
+	public static void postTrips(Context context, DatabaseManager db) throws IOException {
+		Log.i(TAG, "Exporting trips");
+		// http://code.google.com/p/android/issues/detail?id=2626		
+		char decimal = '.';
+		char decimalToReplace = ',';
+		
+		final String formKey = PGpsPreferences.getInstance(context).googleFormKey;
+		if(TextUtils.isEmpty(formKey)) {
+			return;
+		}
+		
+		if(PGpsPreferences.getInstance(context).use_comma_as_decimal_seperator) {
+			decimal = ',';
+			decimalToReplace = '.';			
+		}
+		
+		db.deleteShortTrips();
+		updateTripsGeoLocations(context, db);
+		Cursor c = null;
+		try {
+			final Time now = new Time();
+			now.setToNow();
+			c = db.getPostableTrips();			
+			final String url = "https://docs.google.com/spreadsheet/formResponse?formkey=" + formKey;
+          
+			while (c.moveToNext()) {
+				final List<BasicNameValuePair> formParams = new ArrayList<BasicNameValuePair>();
+				
+				final Time start = new Time();
+				start.set(c.getLong(DatabaseManager.COL_IDX_TRIPS_START));
+				final Time end = new Time();
+				end.set(c.getLong(DatabaseManager.COL_IDX_TRIPS_END));
+
+				formParams.add(new BasicNameValuePair("entry.0.single", start.format("%Y-%m-%d")));
+				formParams.add(new BasicNameValuePair("entry.1.single", start.format("%H:%M:%S")));
+				formParams.add(new BasicNameValuePair("entry.2.single", end.format("%Y-%m-%d")));
+				formParams.add(new BasicNameValuePair("entry.3.single", end.format("%H:%M:%S")));				
+
+				formParams.add(new BasicNameValuePair("entry.4.single", getString(c, DatabaseManager.COL_IDX_TRIPS_START_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_START_LOC_LON, "-")));
+				formParams.add(new BasicNameValuePair("entry.5.single", getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_LOC_LON, "-")));
+				formParams.add(new BasicNameValuePair("entry.6.single", getString(c, DatabaseManager.COL_IDX_TRIPS_END_LOC_LAT, "-") + "," + getString(c, DatabaseManager.COL_IDX_TRIPS_END_LOC_LON, "-")));
+
+				formParams.add(new BasicNameValuePair("entry.7.single", getString(c, DatabaseManager.COL_IDX_TRIPS_START_ADR, "-").replace("\"", "\"\"")));
+				formParams.add(new BasicNameValuePair("entry.8.single", getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_ADR, "-").replace("\"", "\"\"")));
+				formParams.add(new BasicNameValuePair("entry.9.single", getString(c, DatabaseManager.COL_IDX_TRIPS_END_ADR, "-").replace("\"", "\"\"")));		
+				
+				formParams.add(new BasicNameValuePair("entry.10.single", getString(c, DatabaseManager.COL_IDX_TRIPS_START_POI, "-").replace("\"", "\"\"")));
+				formParams.add(new BasicNameValuePair("entry.11.single", getString(c, DatabaseManager.COL_IDX_TRIPS_LAST_END_POI, "-").replace("\"", "\"\"")));
+				formParams.add(new BasicNameValuePair("entry.12.single", getString(c, DatabaseManager.COL_IDX_TRIPS_END_POI, "-").replace("\"", "\"\"")));		
+
+				float dist = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE, 0);
+				float distFromLast = getFloat(c, DatabaseManager.COL_IDX_TRIPS_DISTANCE_FROM_LAST, 0);
+				float totalDist = dist + distFromLast;
+				formParams.add(new BasicNameValuePair("entry.13.single", String.format("%.2f", dist / 1000.0f).replace(decimalToReplace, decimal)));
+				formParams.add(new BasicNameValuePair("entry.14.single", String.format("%.2f", distFromLast / 1000.0f).replace(decimalToReplace, decimal)));
+				formParams.add(new BasicNameValuePair("entry.15.single", String.format("%.2f", totalDist / 1000.0f).replace(decimalToReplace, decimal)));
+				
+				final HttpClient client = new DefaultHttpClient();
+				final HttpPost post = new HttpPost(url);
+				
+				post.setEntity(new UrlEncodedFormEntity(formParams));
+				final HttpResponse httpResponse = client.execute(post);
+				if(httpResponse.getStatusLine().getStatusCode() != 200) {
+					throw new IOException(httpResponse.getStatusLine().getReasonPhrase());
+				} else {
+					db.updateTripPosted(c.getLong(DatabaseHelper.COL_IDX_ID));
+				}
+			}
+		} finally {
+			if (c != null)
+				c.close();			
+		}				
 	}
 
 	public static OutputStreamWriter beginGPSLog() {

@@ -1,5 +1,9 @@
 package net.zaczek.PGps.Data;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -14,6 +18,7 @@ public class PGpsPreferences {
 	public boolean trips_geocode;
 	public int merge_trips;
 	public int record_positions;
+	public String googleFormKey = null;
 	
 	private PGpsPreferences()
 	{
@@ -29,7 +34,7 @@ public class PGpsPreferences {
 	}
 
 	public synchronized void load(Context context) {
-		SharedPreferences prefs = PreferenceManager
+		final SharedPreferences prefs = PreferenceManager
 			.getDefaultSharedPreferences(context);
 		
 		log_trips = prefs.getBoolean("log_trips", true);
@@ -47,5 +52,13 @@ public class PGpsPreferences {
 		show_last_without_fix = prefs.getBoolean("show_last_without_fix", false);
 		use_comma_as_decimal_seperator = prefs.getBoolean("use_comma_as_decimal_seperator", true);
 		
+		try {
+			final FileReader reader = DataManager.openRead("GoogleKey.txt");
+			final BufferedReader in = new BufferedReader(reader);
+			googleFormKey = DataManager.readLine(in);
+			reader.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Unable to read googles form key", e);
+		}
 	}
 }

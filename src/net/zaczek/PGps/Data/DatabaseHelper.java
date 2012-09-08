@@ -9,7 +9,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 	private final static String		DATABASE_NAME				= "PGps.db";
-	private final static int		DATABASE_VERSION			= 2;
+	private final static int		DATABASE_VERSION			= 3;
 	
 	public final static String		COL_ID						= "_id";
 	public final static int			COL_IDX_ID					= 0;
@@ -53,8 +53,18 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			if(oldVersion == 2)
 			{
 				// Alter statements 
-				// ...
+				db.execSQL("ALTER TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " ADD " + DatabaseManager.COL_TRIPS_POSTED  + " INTEGER");
+				
+				// Next version
 				oldVersion = 3;				
+			}
+			if(oldVersion == 3)
+			{
+				// Alter statements 
+				// ...
+				
+				// Next version
+				oldVersion = 4;				
 			}
 		}
 		else
@@ -85,7 +95,9 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				DatabaseManager.COL_TRIPS_DISTANCE_FROM_LAST + " REAL",
 				DatabaseManager.COL_TRIPS_START_POI + " TEXT",
 				DatabaseManager.COL_TRIPS_END_POI + " TEXT",
-				DatabaseManager.COL_TRIPS_LAST_END_POI + " TEXT"
+				DatabaseManager.COL_TRIPS_LAST_END_POI + " TEXT",
+				
+				DatabaseManager.COL_TRIPS_POSTED + " INTEGER",
 		});
 
 		db.execSQL("CREATE TABLE " + DatabaseManager.TRIPS_TABLE_NAME + " (" + columns
