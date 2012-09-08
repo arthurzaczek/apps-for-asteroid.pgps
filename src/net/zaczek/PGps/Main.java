@@ -27,6 +27,7 @@ public class Main extends Activity {
 	private static final int MENU_SHOW_TRIPS = 3;
 	private static final int MENU_ABOUT = 4;
 	private static final int MENU_EXIT = 5;
+	private static final int MENU_SIMULATE = 6;
 	private TextView txtStatus;
 	private TextView txtSpeed;
 	private TextView txtAccuracy;
@@ -276,6 +277,8 @@ public class Main extends Activity {
 		menu.add(1, MENU_PREFERENCES, 0, "Settings");
 		menu.add(2, MENU_ABOUT, 0, "About");
 		menu.add(3, MENU_EXIT, 0, "Exit");
+		// Only for debugging
+		// menu.add(4, MENU_SIMULATE, 0, "Simulate");
 		return true;
 	}
 
@@ -295,6 +298,18 @@ public class Main extends Activity {
 			return true;
 		case MENU_EXIT:
 			finish();
+			return true;
+		case MENU_SIMULATE:
+			if (_service != null) {
+				final Location l = new Location("MOCK");
+				l.setLongitude(16.4);
+				for(double lat = 0;lat<10.0;lat+=1.0) {
+					l.setLatitude(48 + (lat / 10.0));
+					_service.onLocationChanged(l);
+				}
+				_service.stopTrip();
+				updateGps();
+			}
 			return true;
 		}
 
