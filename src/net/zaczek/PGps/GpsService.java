@@ -212,7 +212,7 @@ public class GpsService extends Service implements LocationListener, Listener {
 
 	public void onLocationChanged(Location l) {
 		lastLocation = location;
-		location = l;
+		location = new Location(l); // make a copy! This is not a C# struct
 
 		if (lastDistanceLocation == null)
 			lastDistanceLocation = location;
